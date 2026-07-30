@@ -1,4 +1,3 @@
 def test_owo():
-    print("owo")
+    print("OwO")
     assert True
-

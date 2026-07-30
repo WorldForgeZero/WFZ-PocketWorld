@@ -13,14 +13,10 @@ authors = [{ name = "Cain" }]
 dependencies = []
 
 [project.urls]
-homepage = "https://github.com/py-love-gmod/plg-resource-manager"
+homepage = "https://github.com/WorldForgeZero/WFZ-PocketWorld"
 
 [tool.setuptools]
 packages = { find = { where = ["."] } }
-
-[[tool.setuptools.ext-modules]]
-name = "wfz_pocketworld.TODO"
-sources = ["wfz_pocketworld/TODO.c"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
