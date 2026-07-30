@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wfz-pocketworld"
+version = "0.0.1"
+description = "skull"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.13"
+authors = [{ name = "Cain" }]
+dependencies = []
+
+[project.urls]
+homepage = "https://github.com/py-love-gmod/plg-resource-manager"
+
+[tool.setuptools]
+packages = { find = { where = ["."] } }
+
+[[tool.setuptools.ext-modules]]
+name = "wfz_pocketworld.TODO"
+sources = ["wfz_pocketworld/TODO.c"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v"
