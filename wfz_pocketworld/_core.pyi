@@ -1,3 +1,3 @@
 """
-WorldForgeZero PocketWorldCore Engine (C extension)
+WorldForgeZero PocketWorld Engine (C extension)
 """
