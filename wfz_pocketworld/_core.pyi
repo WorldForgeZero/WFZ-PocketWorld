@@ -1,3 +1,6 @@
 """
 WorldForgeZero PocketWorld Engine (C extension)
 """
+
+def plane_create(flags: int) -> int: ...
+def plane_destroy(plane_id: int) -> None: ...

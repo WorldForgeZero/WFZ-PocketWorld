@@ -3,14 +3,14 @@ PYTHON = .venv/bin/python3
 # Параметры Python
 PY_CFLAGS  := $(shell $(PYTHON) -c "import sysconfig; print(sysconfig.get_config_var('CFLAGS') or '')")
 PY_INCLUDE := $(shell $(PYTHON) -c "import sysconfig; print('-I' + sysconfig.get_path('include'))")
-PY_LDFLAGS := $(shell $(PYTHON) -c "import sys, sysconfig; libdir = sysconfig.get_config_var('LIBDIR'); lib = 'python' + sysconfig.get_config_var('VERSION') + sys.abiflags; print('-L' + libdir, '-l' + lib)")
 
 # Компилятор
 CC = gcc
 
 # Общие флаги
-BASE_CFLAGS  = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE)
-BASE_LDFLAGS = -shared $(PY_LDFLAGS)
+INCLUDE_DIRS := $(shell find $(SRC_DIR) -type d -not -path '*/.venv/*' -not -path '*/.git/*' -not -path '*/__pycache__/*' -exec echo -I{} \;)
+BASE_CFLAGS  = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(INCLUDE_DIRS)
+BASE_LDFLAGS = -shared
 
 # Режимы
 DEBUG_CFLAGS   = -g -O0
@@ -30,7 +30,6 @@ RELEASE_OBJS = $(patsubst $(SRC_DIR)/%.c, build/release/%.o, $(SOURCES))
 .PHONY: all debug release clean clear
 
 all: debug
-
 clear: clean
 
 debug: CFLAGS  = $(BASE_CFLAGS) $(DEBUG_CFLAGS)
@@ -42,8 +41,12 @@ release: LDFLAGS = $(BASE_LDFLAGS) $(RELEASE_LDFLAGS)
 release: $(TARGET)
 
 # Сборка .so
-$(TARGET): $(DEBUG_OBJS) $(RELEASE_OBJS)
+$(TARGET): $(DEBUG_OBJS)
 	$(CC) $^ $(LDFLAGS) -o $@
+
+# Цель release
+release: $(RELEASE_OBJS)
+	$(CC) $^ $(LDFLAGS) -o $(TARGET)
 
 # Компиляция .c -> .o
 build/debug/%.o: $(SRC_DIR)/%.c
