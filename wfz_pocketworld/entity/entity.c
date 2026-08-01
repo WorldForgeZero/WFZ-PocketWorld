@@ -11,9 +11,10 @@ Entity *EntityNew(uint32_t type, uint32_t flags, uint8_t width, uint8_t height)
 
     // См. доку
     p->id = 0;
-    p->x = 0;
-    p->y = 0;
-    p->_padding = 0;
+    p->x = p->y = 0;
+
+    // -.-
+    p->_unised1 = 0;
 
     //
     p->type = type;

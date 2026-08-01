@@ -26,8 +26,7 @@ typedef struct Entity
     /// @brief Размеры сущности
     uint8_t width, height;
 
-    /// @brief Я не буду это описывать
-    uint16_t _padding;
+    uint16_t _unised1;
 } Entity; // 24B
 
 /// @brief Выделает поинтер на новый энтити
