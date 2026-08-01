@@ -14,17 +14,16 @@ Plane *PlaneNew(uint32_t flags)
 
     p->max_x = 0;
     p->max_y = 0;
-
     p->origin_x = 0;
     p->origin_y = 0;
 
     return p;
 }
 
-void PlaneFree(Plane *plane)
+void PlaneFree(Plane *pointer)
 {
-    if (plane == NULL)
+    if (pointer == NULL)
         return;
 
-    free(plane);
+    free(pointer);
 }

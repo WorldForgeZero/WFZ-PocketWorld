@@ -41,13 +41,18 @@ enum PlaneFlags
 
 typedef struct Plane
 {
+    /// @brief Уникальный индификатор плоскости
     uint32_t id;
+
+    /// @brief Флаги плоскости @see PlaneFlags
     uint32_t flags;
 
+    /// @brief Максимальные координаты
     uint32_t max_x, max_y;
 
+    /// @brief Координаты отчёта (0,0) плоскости
     int64_t origin_x, origin_y;
-} Plane; // 32 + 32 + 64 + 128 = 256
+} Plane; // 32B
 
 /// @brief Создаёт и инициализирует поверхность
 /// @param flags Флаги поверности. @see PlaneFlags
@@ -55,5 +60,5 @@ typedef struct Plane
 Plane *PlaneNew(uint32_t flags);
 
 /// @brief Освобождает память от поверхности
-/// @param plane Указатель на поверхность
-void PlaneFree(Plane *plane);
+/// @param pointer Указатель на поверхность
+void PlaneFree(Plane *pointer);
