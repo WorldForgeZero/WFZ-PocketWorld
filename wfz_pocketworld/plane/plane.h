@@ -1,30 +1,59 @@
-#ifndef PLANE_H
-#define PLANE_H
+#pragma once
 
 #include <stdlib.h>
+#include <stdint.h>
+
+enum PlaneFlags
+{
+    /// @brief Указывает что текущая поверхность редактируется
+    PLANE_EDITING = (1 << 0),
+
+    // Следующий блок включения выключения симуляци
+
+    /// @brief Указывает что текущая поверхность симулирует атмосферу
+    PLANE_HAS_GAS_SIM = (1 << 1),
+
+    /// @brief Указывает что текущая поверхность симулирует ману
+    PLANE_HAS_MANA_SIM = (1 << 2),
+
+    // Немного управления координатами
+
+    /// @brief Указывает что за x координату нельзя пройти
+    PLANE_SOLID_X = (1 << 3),
+
+    /// @brief Указывает что за y координату пройти нельзя
+    PLANE_SOLID_Y = (1 << 4),
+
+    /// @brief Указывает что координаты зациклены по x
+    PLANE_WRAP_X = (1 << 5),
+
+    /// @brief Указывает что координаты зациклены по y
+    PLANE_WRAP_Y = (1 << 6),
+
+    /// @brief Указывает что координаты по x зафиксированы (не уверен что нужно)
+    PLANE_FIX_X = (1 << 7),
+
+    /// @brief Указывает что координаты по x зафиксированы (не уверен что нужно)
+    PLANE_FIX_Y = (1 << 8),
+
+    // ещё до 31
+};
 
 typedef struct Plane
 {
-    unsigned int id;
-    unsigned int flags;
-} Plane;
+    uint32_t id;
+    uint32_t flags;
 
-typedef struct PlaneManager
-{
-    Plane **items;
-    unsigned int count;
-    unsigned int capacity;
-} PlaneManager;
+    uint32_t max_x, max_y;
 
-extern PlaneManager plane_manager;
+    int64_t origin_x, origin_y;
+} Plane; // 32 + 32 + 64 + 128 = 256
 
-Plane *PlaneNew(unsigned int flags);
+/// @brief Создаёт и инициализирует поверхность
+/// @param flags Флаги поверности. @see PlaneFlags
+/// @return Указатель на структуру если таковая есть
+Plane *PlaneNew(uint32_t flags);
+
+/// @brief Освобождает память от поверхности
+/// @param plane Указатель на поверхность
 void PlaneFree(Plane *plane);
-
-int InitPlaneManager(void);
-int DestroyPlaneManager(void);
-
-unsigned int AddPlane(unsigned int flags);
-int DestroyPlane(unsigned int plane_id);
-
-#endif

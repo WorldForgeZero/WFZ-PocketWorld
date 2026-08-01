@@ -1,6 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "plane.h"
+#include "plane_manager.h"
 
 #define UNUSED(x) (void)(x)
 
@@ -48,7 +49,7 @@ static PyMethodDef core_methods[] = {
     {"plane_destroy", py_plane_destroy, METH_VARARGS, "Destroy a plane by id"},
     {NULL, NULL, 0, NULL}};
 
-// Структура модуля (заполнены все поля)
+// Структура модуля
 static struct PyModuleDef core_module = {
     PyModuleDef_HEAD_INIT,
     "_core",

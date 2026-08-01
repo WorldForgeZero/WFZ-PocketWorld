@@ -3,7 +3,7 @@ import wfz_pocketworld._core
 
 class PlaneManager:
     @staticmethod
-    def create(flags: int = 0) -> int:
+    def create(flags: int) -> int:
         return wfz_pocketworld._core.plane_create(flags)
 
     @staticmethod
