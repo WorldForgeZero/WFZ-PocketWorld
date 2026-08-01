@@ -7,14 +7,14 @@
 typedef struct PlaneManager
 {
     /// @brief Массив указателей на плоскости
-    Plane **items;
+    Plane **planes;
 
     /// @brief Текущее количество указателей
-    uint32_t count;
+    uint32_t plane_count;
 
     /// @brief Максимальный резерв указателей
-    uint32_t capacity;
-} PlaneManager;
+    uint32_t plane_capacity;
+} PlaneManager; // 16B
 
 extern PlaneManager plane_manager;
 
