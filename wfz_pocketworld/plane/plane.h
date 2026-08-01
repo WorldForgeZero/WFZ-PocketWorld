@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include "chunk.h"
+#include "entity.h"
 
 enum PlaneFlags
 {
@@ -43,16 +45,23 @@ typedef struct Plane
 {
     /// @brief Уникальный индификатор плоскости
     uint32_t id;
-
     /// @brief Флаги плоскости @see PlaneFlags
     uint32_t flags;
 
     /// @brief Максимальные координаты
     uint32_t max_x, max_y;
-
     /// @brief Координаты отчёта (0,0) плоскости
     int64_t origin_x, origin_y;
-} Plane; // 32B
+
+    /// @brief Хеш таблица чанков
+    Chunk *chunks;
+
+    /// @brief Глобальная хеш-таблица всех сущностей (по ID)
+    Entity *entities_by_id;
+
+    /// @brief Следующий айдишник энтити
+    uint32_t next_entity_id;
+} Plane; // TODO: B
 
 /// @brief Создаёт и инициализирует поверхность
 /// @param flags Флаги поверности. @see PlaneFlags
@@ -62,3 +71,21 @@ Plane *PlaneNew(uint32_t flags);
 /// @brief Освобождает память от поверхности
 /// @param pointer Указатель на поверхность
 void PlaneFree(Plane *pointer);
+
+/// @brief Добавляет энтити в плоскость
+/// @param plane Указатель на плоскость
+/// @param entity Указатель на энтити (должен быть полностью заполнен, кроме id)
+/// @return ID созданной сущности или 0 при ошибке
+uint32_t PlaneAddEntity(Plane *plane, Entity *entity);
+
+/// @brief Ищет энтити по ID
+/// @param plane Указатель на плоскость
+/// @param entity_id ID энтити
+/// @return Указатель на энтити или NULL
+Entity *PlaneFindEntity(Plane *plane, uint32_t entity_id);
+
+/// @brief Удаляет энтити из плоскости и при необходимости чистит пустой чанк
+/// @param plane Указатель на плоскость
+/// @param entity_id ID энтити
+/// @return 0 если успешно, -1 если плоскость NULL, -2 если энтити не найдена
+int PlaneRemoveEntity(Plane *plane, uint32_t entity_id);

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include "uthash.h"
 
 enum EntityFlags
 {
@@ -26,8 +27,9 @@ typedef struct Entity
     /// @brief Размеры сущности
     uint8_t width, height;
 
-    uint16_t _unised1;
-} Entity; // 24B
+    /// @brief Внутренний указатель для хеш-таблицы (uthash)
+    UT_hash_handle hh;
+} Entity; // TODO:B + 56B https://troydhanson.github.io/uthash/userguide.html#_a_word_about_memory
 
 /// @brief Выделает поинтер на новый энтити
 /// @param type Тип энтити
