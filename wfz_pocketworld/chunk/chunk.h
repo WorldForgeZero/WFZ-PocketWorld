@@ -19,16 +19,14 @@ typedef struct Chunk
     /// @brief Координаты чанка в сетке плоскости
     ChunkKey key;
 
-    /// @brief Динамический массив указателей на сущности
-    Entity **entities;
+    Entity *grid[CHUNK_SIZE][CHUNK_SIZE];
+
     /// @brief Текущее количество сущностей в чанке
     uint32_t entity_count;
-    /// @brief Выделенная ёмкость под массив сущностей
-    uint32_t entity_capacity;
 
     /// @brief Внутренний указатель для хеш-таблицы (uthash)
     UT_hash_handle hh;
-} Chunk; // 32B + 56B https://troydhanson.github.io/uthash/userguide.html#_a_word_about_memory
+} Chunk; // TODO:B + 56B https://troydhanson.github.io/uthash/userguide.html#_a_word_about_memory
 
 /// @brief Создаёт новый пустой чанк
 /// @param cx Координата X чанка в сетке
@@ -46,14 +44,8 @@ void ChunkFree(Chunk *chunk);
 /// @return 0 при успехе, -1 если аргументы NULL, -2 если не удалось расширить память
 int ChunkAddEntity(Chunk *chunk, Entity *entity);
 
-/// @brief Удаляет сущность из чанка (не освобождая память сущности)
+/// @brief Удаляет сущность из сетки чанка (не освобождает память)
 /// @param chunk Указатель на чанк
-/// @param entity_id ID удаляемой сущности
-/// @return 0 при успехе, -1 если chunk == NULL, -2 если сущность не найдена
-int ChunkRemoveEntity(Chunk *chunk, uint32_t entity_id);
-
-/// @brief Ищет сущность по ID в чанке
-/// @param chunk Указатель на чанк
-/// @param entity_id ID сущности
-/// @return Указатель на сущность или NULL
-Entity *ChunkFindEntity(Chunk *chunk, uint32_t entity_id);
+/// @param entity Указатель на удаляемую сущность
+/// @return 0 при успехе, -1 если аргументы NULL, -2 если сущность не найдена
+int ChunkRemoveEntity(Chunk *chunk, Entity *entity);
