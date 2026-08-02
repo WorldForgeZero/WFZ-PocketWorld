@@ -13,8 +13,7 @@ Entity *EntityNew(uint32_t type, uint32_t flags, uint8_t width, uint8_t height)
     p->id = 0;
     p->x = p->y = 0;
 
-    // -.-
-    p->_unised1 = 0;
+    p->cell_next = NULL;
 
     //
     p->type = type;

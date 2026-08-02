@@ -29,6 +29,8 @@ typedef struct Entity
 
     /// @brief Внутренний указатель для хеш-таблицы (uthash)
     UT_hash_handle hh;
+
+    struct Entity *cell_next;
 } Entity; // TODO:B + 56B https://troydhanson.github.io/uthash/userguide.html#_a_word_about_memory
 
 /// @brief Выделает поинтер на новый энтити
