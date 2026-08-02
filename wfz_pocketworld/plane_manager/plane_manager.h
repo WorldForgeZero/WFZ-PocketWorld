@@ -3,45 +3,31 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "plane.h"
+#include "dynarray.h"
+
+DEFINE_DYNARRAY(Plane *, Plane)
 
 typedef struct PlaneManager
 {
-    /// @brief Массив указателей на плоскости
-    Plane **planes;
-
-    /// @brief Текущее количество указателей
-    uint32_t plane_count;
-
-    /// @brief Максимальный резерв указателей
-    uint32_t plane_capacity;
-} PlaneManager; // 16B
+    PlaneArray planes;
+} PlaneManager;
 
 extern PlaneManager plane_manager;
 
 /// @brief Инициализатор plane_manager
-/// @return `0` - Успешно
-///
-/// `-1` - Объект уже инициализирован
-///
-/// `-2` - Нехватило памяти под выделение
+/// @return 0 - успешно, -1 - уже инициализирован, -2 - не хватило памяти
 int InitPlaneManager(void);
 
 /// @brief Освобождает память занятую менеджером
-/// @return `0` - Успешкно
-///
-/// `-1` - Объект не инициализирован
+/// @return 0 - успешно, -1 - объект не инициализирован
 int DestroyPlaneManager(void);
 
 /// @brief Создаёт поверхность в менеджере поверхностей
 /// @param flags Флаги поверхности
-/// @return 0 - если ошибка инициализации. Иначе id поверхности
+/// @return 0 - если ошибка, иначе id поверхности
 unsigned int AddPlane(unsigned int flags);
 
 /// @brief Удаляет созданную через AddPlane() поверхность
-/// @param plane_id индификатор поверхности
-/// @return `0` - Успешно
-///
-/// `-1` - Менеджер не инициализирован
-///
-/// `-2` - Поверхность не найдена
+/// @param plane_id идентификатор поверхности
+/// @return 0 - успешно, -1 - менеджер не инициализирован, -2 - поверхность не найдена
 int DestroyPlane(unsigned int plane_id);
