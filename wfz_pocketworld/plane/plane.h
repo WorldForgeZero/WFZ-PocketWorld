@@ -7,8 +7,8 @@
 
 enum PlaneFlags
 {
-    /// @brief Указывает что текущая поверхность редактируется
-    PLANE_EDITING = (1 << 0),
+    /// @brief Не используется
+    PLANE_UNUSED1 = (1 << 0),
 
     // Следующий блок включения выключения симуляци
 
@@ -72,11 +72,13 @@ Plane *PlaneNew(uint32_t flags);
 /// @param pointer Указатель на поверхность
 void PlaneFree(Plane *pointer);
 
-/// @brief Добавляет энтити в плоскость
+/// @brief Добавляет сущность в плоскость
 /// @param plane Указатель на плоскость
-/// @param entity Указатель на энтити (должен быть полностью заполнен, кроме id)
-/// @return ID созданной сущности или 0 при ошибке
-uint32_t PlaneAddEntity(Plane *plane, Entity *entity);
+/// @param entity Указатель на сущность
+/// @param ext_x X-координата
+/// @param ext_y Y-координата
+/// @return ID созданной сущности, или 0 при ошибке
+uint32_t PlaneAddEntity(Plane *plane, Entity *entity, int64_t ext_x, int64_t ext_y);
 
 /// @brief Ищет энтити по ID
 /// @param plane Указатель на плоскость
@@ -89,3 +91,10 @@ Entity *PlaneFindEntity(Plane *plane, uint32_t entity_id);
 /// @param entity_id ID энтити
 /// @return 0 если успешно, -1 если плоскость NULL, -2 если энтити не найдена
 int PlaneRemoveEntity(Plane *plane, uint32_t entity_id);
+
+/// @brief Получить список сущностей в заданной клетке
+/// @param plane Указатель на плоскость
+/// @param ext_x X-координата
+/// @param ext_y Y-координата
+/// @return Указатель на первую Entity в клетке, или NULL если клетка пуста
+Entity *PlaneGetEntitiesAt(Plane *plane, int64_t ext_x, int64_t ext_y);

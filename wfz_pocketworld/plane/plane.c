@@ -62,13 +62,13 @@ static Chunk *PlaneGetChunk(Plane *plane, uint32_t cx, uint32_t cy)
     return new_chunk;
 }
 
-uint32_t PlaneAddEntity(Plane *plane, Entity *entity)
+uint32_t PlaneAddEntity(Plane *plane, Entity *entity, int64_t ext_x, int64_t ext_y)
 {
     if (!plane || !entity)
         return 0;
 
-    int64_t ix = (int64_t)entity->x + plane->origin_x;
-    int64_t iy = (int64_t)entity->y + plane->origin_y;
+    int64_t ix = ext_x + plane->origin_x;
+    int64_t iy = ext_y + plane->origin_y;
 
     if (ix < 0)
     {
@@ -138,7 +138,8 @@ int PlaneRemoveEntity(Plane *plane, uint32_t entity_id)
     if (!chunk)
         return -2;
 
-    ChunkRemoveEntity(chunk, entity_id);
+    ChunkRemoveEntity(chunk, entity);
+
     if (chunk->entity_count == 0)
     {
         HASH_DEL(plane->chunks, chunk);
@@ -146,7 +147,38 @@ int PlaneRemoveEntity(Plane *plane, uint32_t entity_id)
     }
 
     HASH_DEL(plane->entities_by_id, entity);
+
     EntityFree(entity);
 
     return 0;
+}
+
+Entity *PlaneGetEntitiesAt(Plane *plane, int64_t ext_x, int64_t ext_y)
+{
+    if (!plane)
+        return NULL;
+
+    int64_t ix = ext_x + plane->origin_x;
+    int64_t iy = ext_y + plane->origin_y;
+
+    if (ix < 0 || iy < 0)
+        return NULL;
+
+    if (ix > plane->max_x || iy > plane->max_y)
+        return NULL;
+
+    uint32_t x = (uint32_t)ix;
+    uint32_t y = (uint32_t)iy;
+
+    uint32_t cx = x >> CHUNK_SHIFT;
+    uint32_t cy = y >> CHUNK_SHIFT;
+
+    Chunk *chunk = PlaneGetChunk(plane, cx, cy);
+    if (!chunk)
+        return NULL;
+
+    uint32_t local_x = x & (CHUNK_SIZE - 1);
+    uint32_t local_y = y & (CHUNK_SIZE - 1);
+
+    return chunk->grid[local_x][local_y];
 }
