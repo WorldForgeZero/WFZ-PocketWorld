@@ -36,22 +36,17 @@ void ChunkFree(Chunk *chunk)
     free(chunk);
 }
 
-int ChunkAddEntity(Chunk *chunk, Entity *entity)
+int ChunkAddEntity(Chunk *chunk, Entity *entity, uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y)
 {
     if (!chunk || !entity)
         return -1;
 
-    uint32_t local_x = entity->x & (CHUNK_SIZE - 1);
-    uint32_t local_y = entity->y & (CHUNK_SIZE - 1);
-
-    for (uint8_t dy = 0; dy < entity->height; dy++)
+    for (uint32_t y = start_y; y <= end_y; y++)
     {
-        for (uint8_t dx = 0; dx < entity->width; dx++)
+        for (uint32_t x = start_x; x <= end_x; x++)
         {
-            uint32_t lx = (local_x + dx) & (CHUNK_SIZE - 1);
-            uint32_t ly = (local_y + dy) & (CHUNK_SIZE - 1);
-            entity->cell_next = chunk->grid[lx][ly];
-            chunk->grid[lx][ly] = entity;
+            entity->cell_next = chunk->grid[x][y];
+            chunk->grid[x][y] = entity;
         }
     }
 
@@ -59,23 +54,17 @@ int ChunkAddEntity(Chunk *chunk, Entity *entity)
     return 0;
 }
 
-int ChunkRemoveEntity(Chunk *chunk, Entity *entity)
+int ChunkRemoveEntity(Chunk *chunk, Entity *entity, uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y)
 {
     if (!chunk || !entity)
         return -1;
 
-    uint32_t local_x = entity->x & (CHUNK_SIZE - 1);
-    uint32_t local_y = entity->y & (CHUNK_SIZE - 1);
     uint8_t found = 0;
-
-    for (uint8_t dy = 0; dy < entity->height; dy++)
+    for (uint32_t y = start_y; y <= end_y; y++)
     {
-        for (uint8_t dx = 0; dx < entity->width; dx++)
+        for (uint32_t x = start_x; x <= end_x; x++)
         {
-            uint32_t lx = (local_x + dx) & (CHUNK_SIZE - 1);
-            uint32_t ly = (local_y + dy) & (CHUNK_SIZE - 1);
-
-            Entity **prev = &chunk->grid[lx][ly];
+            Entity **prev = &chunk->grid[x][y];
             while (*prev)
             {
                 if (*prev == entity)
