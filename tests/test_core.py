@@ -1,37 +1,47 @@
 import pytest
 
-from wfz_pocketworld import PlaneManager
+import wfz_pocketworld._core as core
 
 
-class TestPlaneManager:
-    def test_create_plane(self):
-        pid = PlaneManager.create(0)
-        try:
-            assert pid > 0
+@pytest.fixture(autouse=True)
+def manage_world():
+    """Инициализируем мир перед тестом и выключаем после."""
+    core.world_init()
+    yield
+    core.world_shutdown()
 
-        finally:
-            PlaneManager.destroy(pid)
 
-    def test_create_multiple(self):
-        pid1 = PlaneManager.create(1)
-        pid2 = PlaneManager.create(2)
-        try:
-            assert pid1 != pid2
+def test_create_plane():
+    pid = core.plane_create(0)
+    try:
+        assert pid > 0
 
-        finally:
-            PlaneManager.destroy(pid1)
-            PlaneManager.destroy(pid2)
+    finally:
+        core.plane_destroy(pid)
 
-    def test_destroy_existing(self):
-        pid = PlaneManager.create(0)
-        PlaneManager.destroy(pid)
 
-    def test_destroy_nonexistent(self):
-        with pytest.raises(ValueError, match="not found"):
-            PlaneManager.destroy(999)
+def test_create_multiple():
+    pid1 = core.plane_create(1)
+    pid2 = core.plane_create(2)
+    try:
+        assert pid1 != pid2
+    finally:
+        core.plane_destroy(pid1)
+        core.plane_destroy(pid2)
 
-    def test_destroy_twice(self):
-        pid = PlaneManager.create(0)
-        PlaneManager.destroy(pid)
-        with pytest.raises(ValueError, match="not found"):
-            PlaneManager.destroy(pid)
+
+def test_destroy_existing():
+    pid = core.plane_create(0)
+    core.plane_destroy(pid)
+
+
+def test_destroy_nonexistent():
+    with pytest.raises(ValueError, match="not found"):
+        core.plane_destroy(999)
+
+
+def test_destroy_twice():
+    pid = core.plane_create(0)
+    core.plane_destroy(pid)
+    with pytest.raises(ValueError, match="not found"):
+        core.plane_destroy(pid)

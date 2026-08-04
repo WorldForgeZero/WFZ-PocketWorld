@@ -1,5 +1,13 @@
-from .plane_manager import PlaneManager
+from wfz_pocketworld._core import (
+    plane_create,
+    plane_destroy,
+    world_init,
+    world_shutdown,
+)
 
 __all__ = [
-    "PlaneManager",
+    "plane_create",
+    "plane_destroy",
+    "world_init",
+    "world_shutdown",
 ]
