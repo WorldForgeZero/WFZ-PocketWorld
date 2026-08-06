@@ -2,4 +2,5 @@
 
 ## Благодарности
 - https://staruwos.github.io/structviz/ - визуализация насколько хуёво я умею писать код (спасибо за лайв лейаут)
-- [uthash](./wfz_pocketworld/uthash/uthash.h) - с этого [репозитория](https://github.com/troydhanson/uthash)
+- Моя шизофрения.
+
