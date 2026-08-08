@@ -12,7 +12,7 @@ CXXFLAGS = -std=c++17
 # Общие флаги
 INCLUDE_DIRS := $(shell find $(SRC_DIR) -type d -not -path '*/.venv/*' -not -path '*/.git/*' -not -path '*/__pycache__/*' -exec echo -I{} \;)
 BASE_CFLAGS = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(INCLUDE_DIRS) $(PYBIND11_INCLUDE) $(CXXFLAGS)
-BASE_LDFLAGS = -shared
+BASE_LDFLAGS = -shared -lpthread
 
 # Режимы
 DEBUG_CFLAGS   = -g -O0
