@@ -1,4 +1,4 @@
-#include "vector_short.h"
+#include "vector_2d_short.h"
 
 Vector2DShort::Vector2DShort(int16_t x, int16_t y) noexcept : x_(x), y_(y) {}
 Vector2DShort::Vector2DShort() noexcept : x_(0), y_(0) {}
