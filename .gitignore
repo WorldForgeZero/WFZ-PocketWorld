@@ -1,62 +1,21 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[codz]
 *$py.class
 
-# C extensions
-*.so
+# C / C++ / C extensions
 *.o
+*.so
 *.d
+*.dylib
+*.dll
 
-# Distribution / packaging
-.Python
+# Сборка (Makefile / build)
 build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+dist/
 
-# PyInstaller
-#   Usually these files are written by a python script from a template
-#   before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py.cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
-
-# Environments
+# Виртуальное окружение
 .env
 .envrc
 .venv
@@ -66,5 +25,24 @@ ENV/
 env.bak/
 venv.bak/
 
-# Fuck .vscode
+# Зависимости / пакеты
+*.egg
+*.whl
+Pipfile.lock
+poetry.lock
+
+# IDE / редакторы
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Операционные системы
+.DS_Store
+Thumbs.db
+
+# Логи и временные файлы
+*.log
+*.tmp
+.cache/
