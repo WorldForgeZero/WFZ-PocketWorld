@@ -2,10 +2,9 @@
 #include <stdlib.h>
 
 #include "chunk.h"
-#include "chunk_key.h"
 
-Chunk::Chunk(uint32_t cx, uint32_t cy)
-    : key_{cx, cy}
+Chunk::Chunk(uint32_t x, uint32_t y)
+    : key_{x, y}
 {
 }
 
@@ -15,12 +14,12 @@ Chunk::~Chunk()
 
 // Гетеры
 
-uint32_t Chunk::GetCx() const
+uint32_t Chunk::GetX() const
 {
-    return key_.cx;
+    return key_.x;
 }
 
-uint32_t Chunk::GetCy() const
+uint32_t Chunk::GetY() const
 {
-    return key_.cy;
+    return key_.y;
 }
