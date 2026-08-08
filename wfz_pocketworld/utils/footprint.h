@@ -1,0 +1,38 @@
+#pragma once
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <vector>
+
+#include "coordinate.h"
+
+template <typename T>
+class Footprint
+{
+private:
+    struct Cell
+    {
+        Coordinate coord;
+        T value;
+    };
+    std::vector<Cell> cells_;
+
+public:
+    void AddCell(uint32_t x, uint32_t y, T value)
+    {
+        cells_.push_back({{x, y}, value});
+    }
+
+    template <typename Func>
+    void Apply(Func &&func) const
+    {
+        for (const auto &c : cells_)
+        {
+            func(c.coord, c.value);
+        }
+    }
+
+    void Clear() { cells_.clear(); }
+
+    bool IsEmpty() const { return cells_.empty(); }
+};
