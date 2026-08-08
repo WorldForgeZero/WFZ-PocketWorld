@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Echo Test</title></head>
+<body>
+    <h1>Echo WebSocket Test</h1>
+    <input id="msg" type="text" placeholder="Message">
+    <button onclick="send()">Send</button>
+    <pre id="log"></pre>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:9001');
+        ws.onmessage = (e) => log.textContent += 'Server: ' + e.data + '\n';
+        function send() {
+            const m = msg.value;
+            ws.send(m);
+            log.textContent += 'Client: ' + m + '\n';
+            msg.value = '';
+        }
+    </script>
+</body>
+</html>

@@ -21,12 +21,14 @@ RELEASE_LDFLAGS = -flto
 
 # Исходники
 SRC_DIR = wfz_pocketworld
-SOURCES = $(shell find $(SRC_DIR) -name '*.cpp')
+LIB_DIR = lib
+SOURCES = $(shell find $(LIB_DIR) -name '*.cpp')
+SOURCES += $(shell find $(SRC_DIR) -name '*.cpp')
 TARGET  = $(SRC_DIR)/_core.so
 
-# Объектные файлы для разных режимов
-DEBUG_OBJS   = $(patsubst $(SRC_DIR)/%.cpp, build/debug/%.o, $(SOURCES))
-RELEASE_OBJS = $(patsubst $(SRC_DIR)/%.cpp, build/release/%.o, $(SOURCES))
+# Объектные файлы (debug / release)
+DEBUG_OBJS   = $(patsubst %.cpp, build/debug/%.o, $(SOURCES))
+RELEASE_OBJS = $(patsubst %.cpp, build/release/%.o, $(SOURCES))
 
 # Цели
 .PHONY: all debug release clean clear
@@ -46,16 +48,15 @@ release: $(TARGET)
 $(TARGET): $(DEBUG_OBJS)
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-# Цель release
 release: $(RELEASE_OBJS)
 	$(CXX) $^ $(LDFLAGS) -o $(TARGET)
 
 # Компиляция .cpp -> .o
-build/debug/%.o: $(SRC_DIR)/%.cpp
+build/debug/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CFLAGS) -MMD -c $< -o $@
 
-build/release/%.o: $(SRC_DIR)/%.cpp
+build/release/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CFLAGS) -MMD -c $< -o $@
 
