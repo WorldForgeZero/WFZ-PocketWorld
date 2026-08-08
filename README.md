@@ -6,4 +6,4 @@
 ## Лицензия
 Движок распространяется под [AGPL-3.0](./LICENSE).
 
-Сетевая библиотека [IXWebSocket](./lib/ixwebsocket/) используется под лицензией [BSD-3-Clause license](./lib/ixwebsocket/LICENSE.txt).
+Сетевая библиотека [IXWebSocket](./lib/net/) используется под лицензией [BSD-3-Clause license](./lib/ixwebsocket/LICENSE.txt).
