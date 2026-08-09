@@ -1,43 +1,55 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdint>
 
 #include "coordinate.h"
+#include "resistance.h"
 #include "vector_2d.h"
+
+enum EntityFlags : uint32_t
+{
+    ENTITY_SOLID = 1 << 0, // блокирует движение
+    ENTITY_FLOOR = 1 << 1, // определяет, можно ли здесь стоять и держать газ
+};
 
 class Entity
 {
 private:
-    // Служебное
-    uint32_t id_;
+    uint32_t id = 0;
     uint32_t type_;
     Coordinate coord_;
-    uint32_t flags_; // see in entity_flags.h
+    uint32_t flags_;
 
-    // Пространственное ориентирование
-    uint8_t rotation_; // see in constants.h
-    uint8_t height_, width_;
+    uint8_t rotation = 0;
+    uint8_t height = 1, width = 1;
 
-    // Физон
-    Vector2D vec_;
+    Vector2D vel;
 
-    uint8_t gas_isolation_;
-    uint8_t mana_isolation_;
-    uint8_t rad_isolation_;
+    Resistance res;
 
-    // Хранение
-    Entity *cell_next_;
+    Entity *cell_next_ = nullptr;
 
 public:
-    Entity(uint32_t type,
-           uint32_t flags,
-           uint8_t rotation = 0,
-           uint8_t height = 1,
-           uint8_t width = 1,
-           uint8_t gas_isolation = 0,
-           uint8_t mana_isolation = 0,
-           uint8_t rad_isolation = 0);
+    Entity(
+        uint32_t type,
+        uint32_t flags,
+        uint8_t rotation = 0,
+        uint8_t height = 1,
+        uint8_t width = 1,
+        Resistance res = {0, 0, 0, 0});
 
     ~Entity() = default;
+
+    Entity(const Entity &) = delete;
+    Entity &operator=(const Entity &) = delete;
+
+    // Геттеры и сеттеры
+    uint32_t GetType() const;
+    uint32_t GetFlags() const;
+    bool HasFlag(uint32_t flag) const;
+    void AddFlag(uint32_t flag);
+    void RemoveFlag(uint32_t flag);
+
+    Entity *GetCellNext() const;
+    void SetCellNext(Entity *next);
 };
