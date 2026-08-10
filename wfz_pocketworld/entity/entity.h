@@ -14,11 +14,8 @@ enum EntityFlags : uint32_t
 
 class Entity
 {
-private:
+public:
     uint32_t id = 0;
-    uint32_t type_;
-    Coordinate coord_;
-    uint32_t flags_;
 
     uint8_t rotation = 0;
     uint8_t height = 1, width = 1;
@@ -27,8 +24,13 @@ private:
 
     Resistance res;
 
-    Entity *cell_next_ = nullptr;
+private:
+    uint32_t type_;
+    Coordinate coord_;
+    uint32_t flags_;
 
+    Entity *cell_next_ = nullptr;
+    
 public:
     Entity(
         uint32_t type,
