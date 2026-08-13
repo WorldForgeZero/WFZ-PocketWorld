@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include <cstdint>
 #include <vector>
 
 #include "coordinate.h"
@@ -8,13 +8,11 @@
 
 class Tile
 {
-
 public:
-    Coordinate coord;
+    Coordinate coord{0, 0};
 
     std::vector<Entity *> occupyingEntities;
 
-public:
-    Tile();
-    ~Tile();
+    Tile() = default;
+    ~Tile() = default;
 };
