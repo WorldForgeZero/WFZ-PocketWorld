@@ -6,13 +6,8 @@
 
 #include "coordinate.h"
 
-struct FootprintTemplate
-{
-    std::vector<Coordinate> offsets[4]; // индексы: 0=0°, 1=90°, 2=180°, 3=270°
-};
-
 template <typename T>
-class Footprint
+class TileFootprint
 {
 private:
     struct Cell

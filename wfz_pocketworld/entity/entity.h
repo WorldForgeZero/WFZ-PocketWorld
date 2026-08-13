@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "coordinate.h"
-#include "footprint.h"
+#include "entity_shape.h"
 #include "vector_2d.h"
 
 enum EntityFlags : uint32_t
@@ -27,13 +27,13 @@ public:
     uint8_t width;
     uint8_t height;
 
-    const FootprintTemplate *footprint;
+    const EntityShape *footprint;
 
 public:
     Entity(uint32_t id, uint32_t type, uint32_t flags,
            Coordinate anchor, uint8_t rotation = 0,
            uint8_t width = 1, uint8_t height = 1,
-           const FootprintTemplate *footprint = nullptr);
+           const EntityShape *footprint = nullptr);
 
     Entity(const Entity &) = delete;
     Entity &operator=(const Entity &) = delete;

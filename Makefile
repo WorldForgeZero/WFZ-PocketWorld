@@ -5,30 +5,46 @@ PY_CFLAGS  := $(shell $(PYTHON) -c "import sysconfig; print(sysconfig.get_config
 PY_INCLUDE := $(shell $(PYTHON) -c "import sysconfig; print('-I' + sysconfig.get_path('include'))")
 PYBIND11_INCLUDE := $(shell $(PYTHON) -m pybind11 --includes)
 
-# Компилятор
+# Компиляторы
 CXX = g++
-CXXFLAGS = -std=c++17
+CC  = gcc
 
-# Общие флаги
-INCLUDE_DIRS := $(shell find $(SRC_DIR) -type d -not -path '*/.venv/*' -not -path '*/.git/*' -not -path '*/__pycache__/*' -exec echo -I{} \;)
-BASE_CFLAGS = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(INCLUDE_DIRS) $(PYBIND11_INCLUDE) $(CXXFLAGS)
-BASE_LDFLAGS = -shared -lpthread
-
-# Режимы
-DEBUG_CFLAGS   = -g -O0
-RELEASE_CFLAGS = -O3 -flto -fomit-frame-pointer -DNDEBUG
-RELEASE_LDFLAGS = -flto
-
-# Исходники
+# Базовые флаги
 SRC_DIR = wfz_pocketworld
 LIB_DIR = lib
-SOURCES = $(shell find $(LIB_DIR) -name '*.cpp')
-SOURCES += $(shell find $(SRC_DIR) -name '*.cpp')
-TARGET  = $(SRC_DIR)/_core.so
 
-# Объектные файлы (debug / release)
-DEBUG_OBJS   = $(patsubst %.cpp, build/debug/%.o, $(SOURCES))
-RELEASE_OBJS = $(patsubst %.cpp, build/release/%.o, $(SOURCES))
+# Исходники
+CPP_SOURCES := $(shell find $(SRC_DIR) $(LIB_DIR) \( -name '.*' -prune \) -o \( -type f -name '*.cpp' -print \) )
+C_SOURCES   := $(shell find $(SRC_DIR) $(LIB_DIR) \( -name '.*' -prune \) -o \( -type f -name '*.c' -print \) )
+
+# Объектные файлы для режимов
+DEBUG_CPP_OBJS   = $(patsubst %.cpp, build/debug/%.o, $(CPP_SOURCES))
+DEBUG_C_OBJS     = $(patsubst %.c, build/debug/%.o, $(C_SOURCES))
+DEBUG_OBJS       = $(DEBUG_CPP_OBJS) $(DEBUG_C_OBJS)
+
+RELEASE_CPP_OBJS = $(patsubst %.cpp, build/release/%.o, $(CPP_SOURCES))
+RELEASE_C_OBJS   = $(patsubst %.c, build/release/%.o, $(C_SOURCES))
+RELEASE_OBJS     = $(RELEASE_CPP_OBJS) $(RELEASE_C_OBJS)
+
+TARGET = $(SRC_DIR)/_core.so
+
+# Пути включения
+INCLUDE_DIRS := $(shell find $(SRC_DIR) $(LIB_DIR) \( -name '.*' -prune \) -o -type d -exec echo -I{} \; )
+
+# Флаги C++ и C
+COMMON_CXXFLAGS = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(PYBIND11_INCLUDE) $(INCLUDE_DIRS) -std=c++17
+COMMON_CFLAGS   = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(INCLUDE_DIRS)
+
+DEBUG_CXXFLAGS   = $(COMMON_CXXFLAGS) -g -O0
+DEBUG_CFLAGS     = $(COMMON_CFLAGS) -g -O0
+
+RELEASE_CXXFLAGS = $(COMMON_CXXFLAGS) -O3 -flto -fomit-frame-pointer -DNDEBUG
+RELEASE_CFLAGS   = $(COMMON_CFLAGS) -O3 -flto -fomit-frame-pointer -DNDEBUG
+
+# Линковочные флаги
+BASE_LDFLAGS = -shared -lpthread
+DEBUG_LDFLAGS   = $(BASE_LDFLAGS)
+RELEASE_LDFLAGS = $(BASE_LDFLAGS) -flto
 
 # Цели
 .PHONY: all debug release clean clear
@@ -36,29 +52,33 @@ RELEASE_OBJS = $(patsubst %.cpp, build/release/%.o, $(SOURCES))
 all: debug
 clear: clean
 
-debug: CFLAGS  = $(BASE_CFLAGS) $(DEBUG_CFLAGS)
-debug: LDFLAGS = $(BASE_LDFLAGS)
-debug: $(TARGET)
-
-release: CFLAGS  = $(BASE_CFLAGS) $(RELEASE_CFLAGS)
-release: LDFLAGS = $(BASE_LDFLAGS) $(RELEASE_LDFLAGS)
-release: $(TARGET)
-
-# Сборка .so
-$(TARGET): $(DEBUG_OBJS)
-	$(CXX) $^ $(LDFLAGS) -o $@
-
-release: $(RELEASE_OBJS)
-	$(CXX) $^ $(LDFLAGS) -o $(TARGET)
-
-# Компиляция .cpp -> .o
+# Компиляция C++ в объектные файлы (debug)
 build/debug/%.o: %.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CFLAGS) -MMD -c $< -o $@
+	$(CXX) $(DEBUG_CXXFLAGS) -MMD -c $< -o $@
 
+# Компиляция C в объектные файлы (debug)
+build/debug/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(DEBUG_CFLAGS) -MMD -c $< -o $@
+
+# Компиляция C++ в объектные файлы (release)
 build/release/%.o: %.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CFLAGS) -MMD -c $< -o $@
+	$(CXX) $(RELEASE_CXXFLAGS) -MMD -c $< -o $@
+
+# Компиляция C в объектные файлы (release)
+build/release/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(RELEASE_CFLAGS) -MMD -c $< -o $@
+
+# Линковка debug
+debug: $(DEBUG_OBJS)
+	$(CXX) $(DEBUG_OBJS) $(DEBUG_LDFLAGS) -o $(TARGET)
+
+# Линковка release
+release: $(RELEASE_OBJS)
+	$(CXX) $(RELEASE_OBJS) $(RELEASE_LDFLAGS) -o $(TARGET)
 
 # Зависимости
 -include build/debug/*.d build/release/*.d
@@ -66,4 +86,4 @@ build/release/%.o: %.cpp
 # Очистка
 clean:
 	rm -rf build/ $(TARGET)
-	find $(SRC_DIR) -type f \( -name '*.o' -o -name '*.d' \) -delete
+	find $(SRC_DIR) $(LIB_DIR) -type f \( -name '*.o' -o -name '*.d' \) -delete

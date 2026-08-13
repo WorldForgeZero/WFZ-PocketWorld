@@ -1,9 +1,9 @@
 #include "entity.h"
 
 Entity::Entity(uint32_t id, uint32_t type, uint32_t flags,
-               Coordinate anchor, uint8_t rotation = 0,
-               uint8_t width = 1, uint8_t height = 1,
-               const FootprintTemplate *footprint = nullptr)
+               Coordinate anchor, uint8_t rotation,
+               uint8_t width, uint8_t height,
+               const EntityShape *footprint)
     : id(id), type(type), flags(flags),
       anchor(anchor), rotation(rotation),
       vel(0, 0), width(width), height(height),
