@@ -3,13 +3,11 @@
 #include <cstdint>
 #include <vector>
 
-#include "coordinate.h"
-#include "entity.h"
-
 class Tile
 {
 public:
-    Coordinate coord{0, 0};
+    uint8_t localX = 0;
+    uint8_t localY = 0;
 
     std::vector<Entity *> occupyingEntities;
 

@@ -18,7 +18,7 @@ private:
     std::vector<Cell> cells_;
 
 public:
-    void AddCell(uint32_t x, uint32_t y, T value)
+    void AddCell(int32_t x, int32_t y, T value)
     {
         cells_.push_back({{x, y}, value});
     }

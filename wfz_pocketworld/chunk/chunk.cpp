@@ -1,17 +1,14 @@
 #include "chunk.h"
-#include "entity.h"
 
-Chunk::Chunk(uint32_t chunkX, uint32_t chunkY)
-    : key_{chunkX, chunkY}
+Chunk::Chunk(int32_t chunkX, int32_t chunkY)
+    : chunkX_(chunkX), chunkY_(chunkY)
 {
-    uint32_t baseX = chunkX * CHUNK_SIZE;
-    uint32_t baseY = chunkY * CHUNK_SIZE;
-
     for (uint32_t iy = 0; iy < CHUNK_SIZE; ++iy)
     {
         for (uint32_t ix = 0; ix < CHUNK_SIZE; ++ix)
         {
-            tiles_[iy * CHUNK_SIZE + ix].coord = {baseX + ix, baseY + iy};
+            tiles_[iy * CHUNK_SIZE + ix].localX = static_cast<uint8_t>(ix);
+            tiles_[iy * CHUNK_SIZE + ix].localY = static_cast<uint8_t>(iy);
         }
     }
 }
