@@ -30,11 +30,15 @@ public:
     void RemoveChunk(int32_t globalX, int32_t globalY);
 
     // Сущности
-    EntityId SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation = 0, uint8_t width = 1, uint8_t height = 1, const EntityShape *footprint = nullptr);
+    EntityId SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation = 0, const EntityShape *footprint = nullptr);
     void RemoveEntity(EntityId id);
     bool MoveEntity(EntityId id, Coordinate newAnchor);
     Entity *GetEntity(EntityId id);
     const std::vector<Entity *> &GetAllEntities() const;
+
+    // Движение и тик
+    void SetVelocity(EntityId id, Vector2D newVel);
+    void Tick(double dt);
 
 private:
     Chunk *GetChunkByChunkCoords(int32_t chunkX, int32_t chunkY);
@@ -46,7 +50,6 @@ private:
         int32_t result = tileCoord / CHUNK_SIZE;
         if (tileCoord % CHUNK_SIZE != 0 && tileCoord < 0)
             --result;
-
         return result;
     }
 };

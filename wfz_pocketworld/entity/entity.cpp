@@ -1,12 +1,17 @@
 #include "entity.h"
+#include "constants.h"
 
-Entity::Entity(uint32_t id, uint32_t type, uint32_t flags,
-               Coordinate anchor, uint8_t rotation,
-               uint8_t width, uint8_t height,
+Entity::Entity(uint32_t id,
+               uint32_t type,
+               uint32_t flags,
+               Coordinate anchor,
+               uint8_t rotation,
                const EntityShape *footprint)
     : id(id), type(type), flags(flags),
-      anchor(anchor), rotation(rotation),
-      vel(0, 0), width(width), height(height),
+      anchor(anchor),
+      pos(anchor.x * VECTOR2D_FIXED_SCALE, anchor.y * VECTOR2D_FIXED_SCALE),
+      rotation(rotation),
+      vel(0, 0),
       footprint(footprint)
 {
 }
@@ -25,42 +30,7 @@ std::vector<Coordinate> Entity::GetOccupiedTiles() const
     }
     else
     {
-        int w = width;
-        int h = height;
-        if (rotation == 1 || rotation == 3)
-            std::swap(w, h);
-
-        result.reserve(w * h);
-        for (int dx = 0; dx < w; ++dx)
-        {
-            for (int dy = 0; dy < h; ++dy)
-            {
-                int ox = dx, oy = dy;
-                switch (rotation)
-                {
-                case 0:
-                    ox = dx;
-                    oy = dy;
-                    break;
-
-                case 1:
-                    ox = dy;
-                    oy = -dx;
-                    break;
-
-                case 2:
-                    ox = -dx;
-                    oy = -dy;
-                    break;
-
-                case 3:
-                    ox = -dy;
-                    oy = dx;
-                    break;
-                }
-                result.push_back({anchor.x + ox, anchor.y + oy});
-            }
-        }
+        result.push_back({anchor.x, anchor.y});
     }
     return result;
 }

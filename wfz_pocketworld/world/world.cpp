@@ -21,9 +21,10 @@ void World::RemoveChunk(int32_t globalX, int32_t globalY)
     RemoveChunkByChunkCoords(chunkX, chunkY);
 }
 
-EntityId World::SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, uint8_t width, uint8_t height, const EntityShape *footprint)
+EntityId World::SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor,
+                            uint8_t rotation, const EntityShape *footprint)
 {
-    return entityManager_.SpawnEntity(*this, type, flags, anchor, rotation, width, height, footprint);
+    return entityManager_.SpawnEntity(*this, type, flags, anchor, rotation, footprint);
 }
 
 void World::RemoveEntity(EntityId id)
@@ -44,6 +45,16 @@ Entity *World::GetEntity(EntityId id)
 const std::vector<Entity *> &World::GetAllEntities() const
 {
     return entityManager_.GetAll();
+}
+
+void World::SetVelocity(EntityId id, Vector2D newVel)
+{
+    entityManager_.SetVelocity(id, newVel);
+}
+
+void World::Tick(double dt)
+{
+    entityManager_.UpdateMovement(*this, dt);
 }
 
 Chunk *World::GetChunkByChunkCoords(int32_t chunkX, int32_t chunkY)

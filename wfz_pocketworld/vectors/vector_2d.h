@@ -14,8 +14,11 @@ public:
 
     ~Vector2D() = default;
 
-    int32_t GetX() const noexcept;
-    int32_t GetY() const noexcept;
+    int32_t GetX() const noexcept { return x_; };
+    int32_t GetY() const noexcept { return y_; };
+
+    void SetX(int32_t x) noexcept { x_ = x; };
+    void SetY(int32_t y) noexcept { y_ = y; };
 
     Vector2D operator+(const Vector2D &other) const noexcept;
     Vector2D operator+(int32_t value) const noexcept;

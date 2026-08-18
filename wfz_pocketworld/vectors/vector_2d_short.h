@@ -17,6 +17,9 @@ public:
     int16_t GetX() const noexcept;
     int16_t GetY() const noexcept;
 
+    void SetX(int16_t x) noexcept { x_ = x; };
+    void SetY(int16_t y) noexcept { y_ = y; };
+
     Vector2DShort operator+(const Vector2DShort &other) const noexcept;
     Vector2DShort operator+(int16_t value) const noexcept;
 
