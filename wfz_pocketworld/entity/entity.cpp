@@ -1,17 +1,18 @@
 #include "entity.h"
 #include "constants.h"
 
-Entity::Entity(uint32_t id,
-               uint32_t type,
-               uint32_t flags,
-               Coordinate anchor,
-               uint8_t rotation,
-               const EntityShape *footprint)
+Entity::Entity(
+    uint32_t id,
+    uint32_t type,
+    uint32_t flags,
+    Coordinate anchor,
+    uint8_t rotation,
+    const EntityShape *footprint)
     : id(id), type(type), flags(flags),
       anchor(anchor),
       pos(anchor.x * VECTOR2D_FIXED_SCALE, anchor.y * VECTOR2D_FIXED_SCALE),
       rotation(rotation),
-      vel(0, 0),
+      velX(0.0), velY(0.0),
       footprint(footprint)
 {
 }

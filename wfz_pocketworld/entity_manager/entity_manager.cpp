@@ -78,6 +78,7 @@ void EntityManager::RemoveEntity(World &world, EntityId id)
     entityIndex_.erase(entIt);
     entityChunk_.erase(id);
 }
+
 bool EntityManager::TryMoveEntityToTile(World &world, EntityId id, Coordinate newAnchor)
 {
     auto entIt = entityIndex_.find(id);
@@ -208,7 +209,7 @@ bool EntityManager::IsTileBlocked(World &world, Coordinate coord)
     return tile.solidCount > 0;
 }
 
-void EntityManager::SetVelocity(EntityId id, Vector2D newVel)
+void EntityManager::SetVelocity(EntityId id, double newVelX, double newVelY)
 {
     auto it = entityIndex_.find(id);
     if (it == entityIndex_.end())
@@ -216,10 +217,11 @@ void EntityManager::SetVelocity(EntityId id, Vector2D newVel)
 
     Entity *entity = it->second;
 
-    bool wasMoving = (entity->vel.GetX() != 0 || entity->vel.GetY() != 0);
-    bool willMove = (newVel.GetX() != 0 || newVel.GetY() != 0);
+    bool wasMoving = (entity->velX != 0.0 || entity->velY != 0.0);
+    bool willMove = (newVelX != 0.0 || newVelY != 0.0);
 
-    entity->vel = newVel;
+    entity->velX = newVelX;
+    entity->velY = newVelY;
 
     if (!wasMoving && willMove)
     {
@@ -244,31 +246,29 @@ void EntityManager::UpdateMovement(World &world, double dt)
     {
         Entity *entity = movingEntities_[i];
 
-        int32_t vx = static_cast<int32_t>(entity->vel.GetX() * VECTOR2D_FIXED_SCALE);
-        int32_t vy = static_cast<int32_t>(entity->vel.GetY() * VECTOR2D_FIXED_SCALE);
+        double dx = entity->velX * dt * VECTOR2D_FIXED_SCALE;
+        double dy = entity->velY * dt * VECTOR2D_FIXED_SCALE;
 
-        int32_t dx = static_cast<int32_t>(vx * dt);
-        int32_t dy = static_cast<int32_t>(vy * dt);
+        int32_t stepX = static_cast<int32_t>(std::round(dx));
+        int32_t stepY = static_cast<int32_t>(std::round(dy));
 
-        if (dx == 0 && dy == 0)
+        if (stepX == 0 && stepY == 0)
         {
             ++i;
             continue;
         }
 
-        int32_t steps = std::max(std::abs(dx), std::abs(dy)) / MAX_STEP + 1;
-        if (steps > 100)
-            steps = 100; // защита от чрезмерного разбиения
+        int32_t steps = std::max(std::abs(stepX), std::abs(stepY)) / MAX_STEP + 1;
 
-        int32_t stepDx = dx / steps;
-        int32_t stepDy = dy / steps;
+        int32_t subStepX = stepX / steps;
+        int32_t subStepY = stepY / steps;
 
         bool stopped = false;
 
         for (int s = 0; s < steps && !stopped; ++s)
         {
-            int32_t newPosX = entity->pos.GetX() + stepDx;
-            int32_t newPosY = entity->pos.GetY() + stepDy;
+            int32_t newPosX = entity->pos.GetX() + subStepX;
+            int32_t newPosY = entity->pos.GetY() + subStepY;
 
             int32_t newAnchorX = newPosX / VECTOR2D_FIXED_SCALE;
             int32_t newAnchorY = newPosY / VECTOR2D_FIXED_SCALE;
@@ -279,8 +279,8 @@ void EntityManager::UpdateMovement(World &world, double dt)
             {
                 if (!TryMoveEntityToTile(world, entity->id, {newAnchorX, newAnchorY}))
                 {
-                    // Столкновение
-                    entity->vel = Vector2D(0, 0);
+                    entity->velX = 0.0;
+                    entity->velY = 0.0;
                     stopped = true;
                     break;
                 }
@@ -290,7 +290,7 @@ void EntityManager::UpdateMovement(World &world, double dt)
             entity->pos.SetY(newPosY);
         }
 
-        if (stopped || (entity->vel.GetX() == 0 && entity->vel.GetY() == 0))
+        if (stopped || (entity->velX == 0.0 && entity->velY == 0.0))
         {
             std::swap(movingEntities_[i], movingEntities_.back());
             movingEntities_.pop_back();

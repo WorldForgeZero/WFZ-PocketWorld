@@ -21,8 +21,7 @@ void World::RemoveChunk(int32_t globalX, int32_t globalY)
     RemoveChunkByChunkCoords(chunkX, chunkY);
 }
 
-EntityId World::SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor,
-                            uint8_t rotation, const EntityShape *footprint)
+EntityId World::SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)
 {
     return entityManager_.SpawnEntity(*this, type, flags, anchor, rotation, footprint);
 }
@@ -47,9 +46,9 @@ const std::vector<Entity *> &World::GetAllEntities() const
     return entityManager_.GetAll();
 }
 
-void World::SetVelocity(EntityId id, Vector2D newVel)
+void World::SetVelocity(EntityId id, double newVelX, double newVelY)
 {
-    entityManager_.SetVelocity(id, newVel);
+    entityManager_.SetVelocity(id, newVelX, newVelY);
 }
 
 void World::Tick(double dt)

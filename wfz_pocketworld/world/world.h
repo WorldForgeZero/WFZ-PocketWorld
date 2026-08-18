@@ -37,7 +37,7 @@ public:
     const std::vector<Entity *> &GetAllEntities() const;
 
     // Движение и тик
-    void SetVelocity(EntityId id, Vector2D newVel);
+    void SetVelocity(EntityId id, double newVelX, double newVelY);
     void Tick(double dt);
 
 private:
@@ -50,6 +50,7 @@ private:
         int32_t result = tileCoord / CHUNK_SIZE;
         if (tileCoord % CHUNK_SIZE != 0 && tileCoord < 0)
             --result;
+
         return result;
     }
 };

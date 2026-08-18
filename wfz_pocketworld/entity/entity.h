@@ -26,14 +26,20 @@ public:
     Coordinate anchor; //< опорная клетка (глобальные координаты)
     Vector2D pos;      //< fixed-point позиция (1 тайл = VECTOR2D_FIXED_SCALE)
     uint8_t rotation;  //< 0..3 (0°, 90°, 180°, 270°)
-    Vector2D vel;      //< скорость
+
+    double velX = 0.0; // скорость, тайлы/сек
+    double velY = 0.0;
 
     const EntityShape *footprint; //< если задан, определяет форму и размер; иначе 1x1
 
 public:
-    Entity(uint32_t id, uint32_t type, uint32_t flags,
-           Coordinate anchor, uint8_t rotation = 0,
-           const EntityShape *footprint = nullptr);
+    Entity(
+        uint32_t id,
+        uint32_t type,
+        uint32_t flags,
+        Coordinate anchor,
+        uint8_t rotation = 0,
+        const EntityShape *footprint = nullptr);
 
     Entity(const Entity &) = delete;
     Entity &operator=(const Entity &) = delete;
