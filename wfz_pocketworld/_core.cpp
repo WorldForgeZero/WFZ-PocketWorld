@@ -97,16 +97,10 @@ PYBIND11_MODULE(_core, m)
               py::arg("globalX"), py::arg("globalY"))
 
          // Сущности
-         .def("SpawnEntity", [](World &self, uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, uint8_t width, uint8_t height)
-              { return self.SpawnEntity(type, flags, anchor, rotation, width, height, nullptr); }, py::arg("type"), py::arg("flags"), py::arg("anchor"), py::arg("rotation") = 0, py::arg("width") = 1, py::arg("height") = 1)
          .def("SpawnEntity", [](World &self, uint32_t type, uint32_t flags, int32_t x, int32_t y, uint8_t rotation, uint8_t width, uint8_t height)
               { return self.SpawnEntity(type, flags, Coordinate{x, y}, rotation, width, height, nullptr); }, py::arg("type"), py::arg("flags"), py::arg("x"), py::arg("y"), py::arg("rotation") = 0, py::arg("width") = 1, py::arg("height") = 1)
-
-         .def("MoveEntity", [](World &self, EntityId id, Coordinate newAnchor)
-              { return self.MoveEntity(id, newAnchor); }, py::arg("id"), py::arg("newAnchor"))
          .def("MoveEntity", [](World &self, EntityId id, int32_t x, int32_t y)
               { return self.MoveEntity(id, Coordinate{x, y}); }, py::arg("id"), py::arg("x"), py::arg("y"))
-
          .def("RemoveEntity", &World::RemoveEntity, py::arg("id"))
          .def("GetEntity", &World::GetEntity, py::return_value_policy::reference, py::arg("id"))
          .def("GetAllEntities", &World::GetAllEntities, py::return_value_policy::reference_internal);

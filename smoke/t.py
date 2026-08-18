@@ -19,10 +19,10 @@ def get_tile_char(world: core.World, x, y):
             return "#"
 
         elif entity.HasFlag(core.ENTITY_FLOOR):
-            return "."
+            return "F"
 
         else:
-            return "o"
+            return "E"
 
     return " "
 
@@ -46,18 +46,15 @@ def main():
     min_x, max_x = -5, 5
     min_y, max_y = -5, 5
 
-    print("Создаём случайное наполнение...")
     for x in range(min_x, max_x + 1):
         for y in range(min_y, max_y + 1):
-            coord = core.Coordinate(x, y)
             roll = random.random()
-            if roll < 0.7:
-                world.SpawnEntity(100, core.ENTITY_FLOOR, coord)
+            if roll < 0.2:
+                world.SpawnEntity(100, core.ENTITY_FLOOR, x, y)
 
-            elif roll < 0.9:
-                world.SpawnEntity(200, core.ENTITY_SOLID, coord)
+            elif roll < 0.5:
+                world.SpawnEntity(200, core.ENTITY_SOLID, x, y)
 
-    print("Создаём стены...")
     wall_flags = core.ENTITY_SOLID
     for x in range(min_x, max_x + 1):
         world.SpawnEntity(200, wall_flags, x, max_y)
@@ -68,9 +65,7 @@ def main():
         world.SpawnEntity(200, wall_flags, max_x, y)
 
     print("Карта:")
-    visualize(world, min_x, max_x, min_y, max_y)
-
-    print("Готово.")
+    visualize(world, min_x - 5, max_x + 5, min_y - 5, max_y + 5)
 
 
 if __name__ == "__main__":

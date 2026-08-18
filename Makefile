@@ -38,8 +38,8 @@ COMMON_CFLAGS   = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(INCLUDE_DIRS)
 DEBUG_CXXFLAGS   = $(COMMON_CXXFLAGS) -g -O0
 DEBUG_CFLAGS     = $(COMMON_CFLAGS) -g -O0
 
-RELEASE_CXXFLAGS = $(COMMON_CXXFLAGS) -O3 -flto -fomit-frame-pointer -DNDEBUG
-RELEASE_CFLAGS   = $(COMMON_CFLAGS) -O3 -flto -fomit-frame-pointer -DNDEBUG
+RELEASE_CXXFLAGS = $(COMMON_CXXFLAGS) -g -O3 -flto -fomit-frame-pointer -DNDEBUG
+RELEASE_CFLAGS   = $(COMMON_CFLAGS) -g -O3 -flto -fomit-frame-pointer -DNDEBUG
 
 # Линковочные флаги
 BASE_LDFLAGS = -shared -lpthread

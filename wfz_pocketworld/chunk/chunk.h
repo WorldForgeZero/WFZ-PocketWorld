@@ -11,13 +11,8 @@
 
 struct ChunkKey
 {
-    int32_t x;
-    int32_t y;
-
-    bool operator==(const ChunkKey &other) const
-    {
-        return x == other.x && y == other.y;
-    }
+    int32_t x, y;
+    bool operator==(const ChunkKey &o) const { return x == o.x && y == o.y; }
 };
 
 namespace std
@@ -27,7 +22,7 @@ namespace std
     {
         size_t operator()(const ChunkKey &k) const noexcept
         {
-            return std::hash<int32_t>()(k.x) ^ (std::hash<int32_t>()(k.y) << 1);
+            return std::hash<uint64_t>{}((static_cast<uint64_t>(static_cast<uint32_t>(k.x)) << 32) | static_cast<uint32_t>(k.y));
         }
     };
 }
