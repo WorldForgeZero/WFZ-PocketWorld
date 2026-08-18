@@ -6,35 +6,13 @@
 
 #include "chunk.h"
 #include "constants.h"
-
-struct ChunkKey
-{
-    int32_t x;
-    int32_t y;
-
-    bool operator==(const ChunkKey &other) const
-    {
-        return x == other.x && y == other.y;
-    }
-};
-
-namespace std
-{
-    template <>
-    struct hash<ChunkKey>
-    {
-        size_t operator()(const ChunkKey &k) const noexcept
-        {
-            return std::hash<int32_t>()(k.x) ^ (std::hash<int32_t>()(k.y) << 1);
-        }
-    };
-}
+#include "entity_manager.h"
 
 class World
 {
-
 private:
     std::unordered_map<ChunkKey, std::unique_ptr<Chunk>> chunks_;
+    EntityManager entityManager_;
 
 public:
     World() = default;
@@ -46,9 +24,17 @@ public:
     World(World &&) noexcept = default;
     World &operator=(World &&) noexcept = default;
 
+    // Чанки
     Chunk *GetChunk(int32_t globalX, int32_t globalY);
     Chunk &GetOrCreateChunk(int32_t globalX, int32_t globalY);
     void RemoveChunk(int32_t globalX, int32_t globalY);
+
+    // Сущности
+    EntityId SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation = 0, uint8_t width = 1, uint8_t height = 1, const EntityShape *footprint = nullptr);
+    void RemoveEntity(EntityId id);
+    bool MoveEntity(EntityId id, Coordinate newAnchor);
+    Entity *GetEntity(EntityId id);
+    const std::vector<Entity *> &GetAllEntities() const;
 
 private:
     Chunk *GetChunkByChunkCoords(int32_t chunkX, int32_t chunkY);

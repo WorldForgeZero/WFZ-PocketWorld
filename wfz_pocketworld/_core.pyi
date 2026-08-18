@@ -1,5 +1,7 @@
 """WorldForgeZero PocketWorld Engine (C extension)."""
 
+from typing import overload
+
 class Coordinate:
     x: int
     y: int
@@ -49,12 +51,9 @@ class World:
     def GetChunk(self, globalX: int, globalY: int) -> Chunk | None: ...
     def GetOrCreateChunk(self, globalX: int, globalY: int) -> Chunk: ...
     def RemoveChunk(self, globalX: int, globalY: int) -> None: ...
-
-class EntityManager:
-    def __init__(self) -> None: ...
+    @overload
     def SpawnEntity(
         self,
-        world: World,
         type: int,
         flags: int,
         anchor: Coordinate,
@@ -62,9 +61,24 @@ class EntityManager:
         width: int = 1,
         height: int = 1,
     ) -> int: ...
-    def RemoveEntity(self, world: World, id: int) -> None: ...
-    def MoveEntity(self, world: World, id: int, newAnchor: Coordinate) -> bool: ...
+    @overload
+    def SpawnEntity(
+        self,
+        type: int,
+        flags: int,
+        x: int,
+        y: int,
+        rotation: int = 0,
+        width: int = 1,
+        height: int = 1,
+    ) -> int: ...
+    @overload
+    def MoveEntity(self, id: int, newAnchor: Coordinate) -> bool: ...
+    @overload
+    def MoveEntity(self, id: int, x: int, y: int) -> bool: ...
+    def RemoveEntity(self, id: int) -> None: ...
     def GetEntity(self, id: int) -> Entity | None: ...
+    def GetAllEntities(self) -> list[Entity]: ...
 
 # Константы
 ENTITY_SOLID: int

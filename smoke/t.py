@@ -42,7 +42,6 @@ def visualize(world, min_x, max_x, min_y, max_y):
 
 def main():
     world = core.World()
-    manager = core.EntityManager()
 
     min_x, max_x = -5, 5
     min_y, max_y = -5, 5
@@ -53,20 +52,20 @@ def main():
             coord = core.Coordinate(x, y)
             roll = random.random()
             if roll < 0.7:
-                manager.SpawnEntity(world, 100, core.ENTITY_FLOOR, coord)
+                world.SpawnEntity(100, core.ENTITY_FLOOR, coord)
 
             elif roll < 0.9:
-                manager.SpawnEntity(world, 200, core.ENTITY_SOLID, coord)
+                world.SpawnEntity(200, core.ENTITY_SOLID, coord)
 
     print("Создаём стены...")
     wall_flags = core.ENTITY_SOLID
     for x in range(min_x, max_x + 1):
-        manager.SpawnEntity(world, 200, wall_flags, core.Coordinate(x, max_y))
-        manager.SpawnEntity(world, 200, wall_flags, core.Coordinate(x, min_y))
+        world.SpawnEntity(200, wall_flags, x, max_y)
+        world.SpawnEntity(200, wall_flags, x, min_y)
 
     for y in range(min_y + 1, max_y):
-        manager.SpawnEntity(world, 200, wall_flags, core.Coordinate(min_x, y))
-        manager.SpawnEntity(world, 200, wall_flags, core.Coordinate(max_x, y))
+        world.SpawnEntity(200, wall_flags, min_x, y)
+        world.SpawnEntity(200, wall_flags, max_x, y)
 
     print("Карта:")
     visualize(world, min_x, max_x, min_y, max_y)

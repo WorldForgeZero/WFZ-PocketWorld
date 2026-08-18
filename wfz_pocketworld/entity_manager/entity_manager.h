@@ -18,8 +18,10 @@ private:
     void RemoveFromTileOccupancy(World &world, Entity *entity, const std::vector<Coordinate> &occupiedTiles);
     bool IsTileBlocked(World &world, Coordinate coord, Entity *ignoreEntity);
 
-    std::unordered_map<EntityId, Entity *> entityIndex_;
-    std::unordered_map<EntityId, Chunk *> entityChunk_;
+    std::unordered_map<EntityId, Entity *> entityIndex_; // ID -> указатель
+    std::unordered_map<EntityId, Chunk *> entityChunk_;  // ID -> чанк
+    std::vector<Entity *> entities_;                     // все активные сущности (для быстрого обхода)
+
     EntityId nextEntityId_ = 1;
 
 public:
@@ -37,5 +39,5 @@ public:
     bool MoveEntity(World &world, EntityId id, Coordinate newAnchor);
 
     Entity *GetEntity(EntityId id);
-    const std::unordered_map<EntityId, Entity *> &GetAll() const { return entityIndex_; }
+    const std::vector<Entity *> &GetAll() const { return entities_; }
 };

@@ -1,8 +1,9 @@
+#include "entity_manager.h"
+
 #include <algorithm>
 #include <utility>
 
 #include "chunk.h"
-#include "entity_manager.h"
 #include "tile.h"
 #include "world.h"
 
@@ -29,6 +30,7 @@ EntityId EntityManager::SpawnEntity(World &world, uint32_t type, uint32_t flags,
 
     entityIndex_[rawEntity->id] = rawEntity;
     entityChunk_[rawEntity->id] = &chunk;
+    entities_.push_back(rawEntity);
 
     AddToTileOccupancy(world, rawEntity, occupied);
 
@@ -46,6 +48,14 @@ void EntityManager::RemoveEntity(World &world, EntityId id)
 
     auto occupied = entity->GetOccupiedTiles();
     RemoveFromTileOccupancy(world, entity, occupied);
+
+    auto &vec = entities_;
+    auto vecIt = std::find(vec.begin(), vec.end(), entity);
+    if (vecIt != vec.end())
+    {
+        std::swap(*vecIt, vec.back());
+        vec.pop_back();
+    }
 
     chunk->RemoveEntity(entity);
 

@@ -9,6 +9,29 @@
 #include "entity.h"
 #include "tile.h"
 
+struct ChunkKey
+{
+    int32_t x;
+    int32_t y;
+
+    bool operator==(const ChunkKey &other) const
+    {
+        return x == other.x && y == other.y;
+    }
+};
+
+namespace std
+{
+    template <>
+    struct hash<ChunkKey>
+    {
+        size_t operator()(const ChunkKey &k) const noexcept
+        {
+            return std::hash<int32_t>()(k.x) ^ (std::hash<int32_t>()(k.y) << 1);
+        }
+    };
+}
+
 class Chunk
 {
 private:
