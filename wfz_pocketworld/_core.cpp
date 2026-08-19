@@ -1,4 +1,3 @@
-// _core.cpp
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -17,7 +16,6 @@ PYBIND11_MODULE(_core, m)
      m.doc() = "WorldForgeZero PocketWorld Engine (C extension).";
 
      m.attr("ENTITY_SOLID") = static_cast<uint32_t>(ENTITY_SOLID);
-     m.attr("ENTITY_FLOOR") = static_cast<uint32_t>(ENTITY_FLOOR);
      m.attr("ENTITY_EPHEMERAL") = static_cast<uint32_t>(ENTITY_EPHEMERAL);
 
      py::class_<Resistance>(m, "Resistance")
@@ -63,6 +61,7 @@ PYBIND11_MODULE(_core, m)
          .def_readonly("localX", &Tile::localX)
          .def_readonly("localY", &Tile::localY)
          .def_readonly("solidCount", &Tile::solidCount)
+         .def_readwrite("floorType", &Tile::floorType)
          .def("GetOccupyingEntities", [](Tile &self)
               {
             py::list result;
@@ -99,6 +98,12 @@ PYBIND11_MODULE(_core, m)
          .def("GetTile", &World::GetTile, py::return_value_policy::reference,
               py::arg("globalX"), py::arg("globalY"))
 
+         // Полы
+         .def("SetFloor", [](World &self, int32_t x, int32_t y, uint16_t type)
+              { self.SetFloor(x, y, type); }, py::arg("x"), py::arg("y"), py::arg("type"))
+
+         .def("RemoveFloor", &World::RemoveFloor, py::arg("x"), py::arg("y"))
+
          // Сущности
          .def("SpawnEntity", [](World &self, uint32_t type, uint32_t flags, int32_t x, int32_t y, uint8_t rotation)
               { return self.SpawnEntity(type, flags, Coordinate{x, y}, rotation, nullptr); }, py::arg("type"), py::arg("flags"), py::arg("x"), py::arg("y"), py::arg("rotation") = 0)
@@ -109,7 +114,6 @@ PYBIND11_MODULE(_core, m)
          .def("RemoveEntity", &World::RemoveEntity, py::arg("id"))
          .def("GetEntity", &World::GetEntity, py::return_value_policy::reference, py::arg("id"))
 
-         // GetAllEntities оборачиваем, чтобы не было передачи владения
          .def("GetAllEntities", [](World &self)
               {
             const auto& entities = self.GetAllEntities();
@@ -120,10 +124,9 @@ PYBIND11_MODULE(_core, m)
             return result; })
 
          .def("SetVelocity", &World::SetVelocity, py::arg("id"), py::arg("x"), py::arg("y"))
-
          .def("Tick", &World::Tick, py::arg("dt"))
 
-         // Поиск: оборачиваем, чтобы не передавать владение сущностями
+         // Поиск
          .def("GetEntitiesInRect", [](World &self, int32_t minX, int32_t minY, int32_t maxX, int32_t maxY, uint32_t flags)
               {
             auto entities = self.GetEntitiesInRect(minX, minY, maxX, maxY, flags);

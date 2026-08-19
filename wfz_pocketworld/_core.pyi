@@ -43,6 +43,9 @@ class Tile:
     localX: int
     localY: int
     solidCount: int
+    floorType: int
+    floorRes: Resistance
+    hasFloorRes: bool
     def GetOccupyingEntities(self) -> list[Entity]: ...
 
 class Chunk:
@@ -57,6 +60,12 @@ class World:
     def GetOrCreateChunk(self, globalX: int, globalY: int) -> Chunk: ...
     def RemoveChunk(self, globalX: int, globalY: int) -> None: ...
     def GetTile(self, globalX: int, globalY: int) -> Tile | None: ...
+
+    # Полы
+    def SetFloor(self, x: int, y: int, type: int) -> None: ...
+    def RemoveFloor(self, x: int, y: int) -> None: ...
+
+    # Сущности
     def SpawnEntity(
         self,
         type: int,
@@ -104,5 +113,4 @@ class World:
 
 # Константы
 ENTITY_SOLID: int
-ENTITY_FLOOR: int
 ENTITY_EPHEMERAL: int

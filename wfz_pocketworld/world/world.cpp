@@ -38,6 +38,36 @@ Tile *World::GetTile(int32_t globalX, int32_t globalY)
     return &chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
 }
 
+void World::SetFloor(int32_t x, int32_t y, uint16_t type)
+{
+    if (type == 0)
+    {
+        RemoveFloor(x, y);
+        return;
+    }
+
+    Tile *tile = GetTile(x, y);
+    if (!tile)
+    {
+        GetOrCreateChunk(x, y);
+        tile = GetTile(x, y);
+    }
+
+    if (tile)
+    {
+        tile->floorType = type;
+    }
+}
+
+void World::RemoveFloor(int32_t x, int32_t y)
+{
+    Tile *tile = GetTile(x, y);
+    if (tile)
+    {
+        tile->floorType = 0;
+    }
+}
+
 EntityId World::SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)
 {
     return entityManager_.SpawnEntity(*this, type, flags, anchor, rotation, footprint);

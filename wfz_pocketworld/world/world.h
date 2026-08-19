@@ -8,6 +8,7 @@
 #include "chunk.h"
 #include "constants.h"
 #include "entity_manager.h"
+#include "resistance.h"
 #include "tile.h"
 
 class World
@@ -34,10 +35,12 @@ public:
     // Получение тайла по глобальным координатам
     Tile *GetTile(int32_t globalX, int32_t globalY);
 
+    // Полы как свойства тайлов
+    void SetFloor(int32_t x, int32_t y, uint16_t type);
+    void RemoveFloor(int32_t x, int32_t y);
+
     // Сущности
-    EntityId SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor,
-                         uint8_t rotation = 0,
-                         const EntityShape *footprint = nullptr);
+    EntityId SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation = 0, const EntityShape *footprint = nullptr);
     void RemoveEntity(EntityId id);
     bool MoveEntity(EntityId id, Coordinate newAnchor);
     Entity *GetEntity(EntityId id);
@@ -65,6 +68,7 @@ private:
         int32_t result = tileCoord / CHUNK_SIZE;
         if (tileCoord % CHUNK_SIZE != 0 && tileCoord < 0)
             --result;
+
         return result;
     }
 };

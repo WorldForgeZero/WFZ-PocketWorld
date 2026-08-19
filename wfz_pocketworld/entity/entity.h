@@ -15,8 +15,7 @@ using EntityId = uint32_t;
 enum EntityFlags : uint32_t
 {
     ENTITY_SOLID = 1 << 0,
-    ENTITY_FLOOR = 1 << 1,
-    ENTITY_EPHEMERAL = 1 << 2,
+    ENTITY_EPHEMERAL = 1 << 1,
 };
 
 class Entity
