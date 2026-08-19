@@ -1,5 +1,8 @@
 #include "world.h"
 
+#include <algorithm>
+#include <cstdlib>
+
 Chunk *World::GetChunk(int32_t globalX, int32_t globalY)
 {
     int32_t chunkX = TileToChunkCoord(globalX);
@@ -19,6 +22,20 @@ void World::RemoveChunk(int32_t globalX, int32_t globalY)
     int32_t chunkX = TileToChunkCoord(globalX);
     int32_t chunkY = TileToChunkCoord(globalY);
     RemoveChunkByChunkCoords(chunkX, chunkY);
+}
+
+Tile *World::GetTile(int32_t globalX, int32_t globalY)
+{
+    Chunk *chunk = GetChunk(globalX, globalY);
+    if (!chunk)
+        return nullptr;
+
+    int32_t chunkX = TileToChunkCoord(globalX);
+    int32_t chunkY = TileToChunkCoord(globalY);
+    int32_t localX = globalX - (chunkX << CHUNK_SHIFT);
+    int32_t localY = globalY - (chunkY << CHUNK_SHIFT);
+
+    return &chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
 }
 
 EntityId World::SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)
@@ -54,6 +71,105 @@ void World::SetVelocity(EntityId id, double newVelX, double newVelY)
 void World::Tick(double dt)
 {
     entityManager_.UpdateMovement(*this, dt);
+}
+
+std::vector<Entity *> World::GetEntitiesInRect(int32_t minX, int32_t minY, int32_t maxX, int32_t maxY, uint32_t flags)
+{
+    std::vector<Entity *> result;
+    int32_t chunkMinX = TileToChunkCoord(minX);
+    int32_t chunkMaxX = TileToChunkCoord(maxX);
+    int32_t chunkMinY = TileToChunkCoord(minY);
+    int32_t chunkMaxY = TileToChunkCoord(maxY);
+
+    for (int32_t cx = chunkMinX; cx <= chunkMaxX; ++cx)
+    {
+        for (int32_t cy = chunkMinY; cy <= chunkMaxY; ++cy)
+        {
+            Chunk *chunk = GetChunkByChunkCoords(cx, cy);
+            if (!chunk)
+                continue;
+
+            for (const auto &unique_entity : chunk->GetEntities())
+            {
+                Entity *entity = unique_entity.get();
+                if (flags != 0 && (entity->flags & flags) == 0)
+                    continue;
+
+                if (entity->anchor.x >= minX && entity->anchor.x <= maxX &&
+                    entity->anchor.y >= minY && entity->anchor.y <= maxY)
+                {
+                    result.push_back(entity);
+                }
+            }
+        }
+    }
+    return result;
+}
+
+std::vector<Entity *> World::GetEntitiesInRadius(Coordinate center, int32_t radius, uint32_t flags)
+{
+    std::vector<Entity *> candidates = GetEntitiesInRect(center.x - radius, center.y - radius, center.x + radius, center.y + radius, flags);
+
+    int64_t radiusSq = static_cast<int64_t>(radius) * radius;
+    std::vector<Entity *> result;
+    result.reserve(candidates.size());
+
+    for (Entity *e : candidates)
+    {
+        int64_t dx = static_cast<int64_t>(e->anchor.x) - center.x;
+        int64_t dy = static_cast<int64_t>(e->anchor.y) - center.y;
+        if (dx * dx + dy * dy <= radiusSq)
+            result.push_back(e);
+    }
+    return result;
+}
+
+std::vector<Entity *> World::GetEntitiesInSquare(Coordinate center, int32_t halfSize, uint32_t flags)
+{
+    return GetEntitiesInRect(center.x - halfSize, center.y - halfSize, center.x + halfSize, center.y + halfSize, flags);
+}
+
+Entity *World::RaycastFirst(Coordinate from, Coordinate to, uint32_t flags)
+{
+    int32_t x0 = from.x, y0 = from.y;
+    int32_t x1 = to.x, y1 = to.y;
+
+    int32_t dx = std::abs(x1 - x0);
+    int32_t dy = std::abs(y1 - y0);
+    int32_t sx = x0 < x1 ? 1 : -1;
+    int32_t sy = y0 < y1 ? 1 : -1;
+    int32_t err = dx - dy;
+
+    while (true)
+    {
+        Tile *tile = GetTile(x0, y0);
+        if (tile)
+        {
+            for (Entity *e : tile->occupyingEntities)
+            {
+                if ((flags != 0) && (e->flags & flags) == 0)
+                    continue;
+
+                return e;
+            }
+        }
+
+        if (x0 == x1 && y0 == y1)
+            break;
+
+        int32_t e2 = 2 * err;
+        if (e2 > -dy)
+        {
+            err -= dy;
+            x0 += sx;
+        }
+        if (e2 < dx)
+        {
+            err += dx;
+            y0 += sy;
+        }
+    }
+    return nullptr;
 }
 
 Chunk *World::GetChunkByChunkCoords(int32_t chunkX, int32_t chunkY)

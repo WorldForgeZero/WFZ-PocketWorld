@@ -20,10 +20,9 @@ private:
     bool TryMoveEntityToTile(World &world, EntityId id, Coordinate newAnchor);
     bool IsTileBlocked(World &world, Coordinate coord);
 
-    std::unordered_map<EntityId, Entity *> entityIndex_;
-    std::unordered_map<EntityId, Chunk *> entityChunk_;
-    std::vector<Entity *> entities_;
-    std::vector<Entity *> movingEntities_;
+    std::unordered_map<EntityId, Entity *> entityIndex_; // ID -> указатель
+    std::vector<Entity *> entities_;                     // все активные сущности
+    std::vector<Entity *> movingEntities_;               // движущиеся сущности
 
     EntityId nextEntityId_ = 1;
 

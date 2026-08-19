@@ -16,6 +16,13 @@ class Vector2D:
     def __mul__(self, value: int) -> Vector2D: ...
     def __truediv__(self, value: int) -> Vector2D: ...
 
+class Resistance:
+    gas: int
+    mana: int
+    rad: int
+    light: int
+    def __init__(self) -> None: ...
+
 class Entity:
     @property
     def id(self) -> int: ...
@@ -26,6 +33,7 @@ class Entity:
     anchor: Coordinate
     pos: Vector2D
     rotation: int
+    res: Resistance
     def GetOccupiedTiles(self) -> list[Coordinate]: ...
     def HasFlag(self, flag: int) -> bool: ...
     def AddFlag(self, flag: int) -> None: ...
@@ -48,6 +56,7 @@ class World:
     def GetChunk(self, globalX: int, globalY: int) -> Chunk | None: ...
     def GetOrCreateChunk(self, globalX: int, globalY: int) -> Chunk: ...
     def RemoveChunk(self, globalX: int, globalY: int) -> None: ...
+    def GetTile(self, globalX: int, globalY: int) -> Tile | None: ...
     def SpawnEntity(
         self,
         type: int,
@@ -62,6 +71,36 @@ class World:
     def GetAllEntities(self) -> list[Entity]: ...
     def SetVelocity(self, id: int, x: float, y: float) -> None: ...
     def Tick(self, dt: float) -> None: ...
+    def GetEntitiesInRect(
+        self,
+        minX: int,
+        minY: int,
+        maxX: int,
+        maxY: int,
+        flags: int = 0,
+    ) -> list[Entity]: ...
+    def GetEntitiesInRadius(
+        self,
+        centerX: int,
+        centerY: int,
+        radius: int,
+        flags: int = 0,
+    ) -> list[Entity]: ...
+    def GetEntitiesInSquare(
+        self,
+        centerX: int,
+        centerY: int,
+        halfSize: int,
+        flags: int = 0,
+    ) -> list[Entity]: ...
+    def RaycastFirst(
+        self,
+        fromX: int,
+        fromY: int,
+        toX: int,
+        toY: int,
+        flags: int,
+    ) -> Entity | None: ...
 
 # Константы
 ENTITY_SOLID: int

@@ -13,7 +13,12 @@ Entity::Entity(
       pos(anchor.x * VECTOR2D_FIXED_SCALE, anchor.y * VECTOR2D_FIXED_SCALE),
       rotation(rotation),
       velX(0.0), velY(0.0),
-      footprint(footprint)
+      res(),
+      footprint(footprint),
+      entityIndex(0),
+      movingIndex(0),
+      isMoving(false),
+      chunk(nullptr)
 {
 }
 

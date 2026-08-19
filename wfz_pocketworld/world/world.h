@@ -3,10 +3,12 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "chunk.h"
 #include "constants.h"
 #include "entity_manager.h"
+#include "tile.h"
 
 class World
 {
@@ -29,16 +31,29 @@ public:
     Chunk &GetOrCreateChunk(int32_t globalX, int32_t globalY);
     void RemoveChunk(int32_t globalX, int32_t globalY);
 
+    // Получение тайла по глобальным координатам
+    Tile *GetTile(int32_t globalX, int32_t globalY);
+
     // Сущности
-    EntityId SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation = 0, const EntityShape *footprint = nullptr);
+    EntityId SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor,
+                         uint8_t rotation = 0,
+                         const EntityShape *footprint = nullptr);
     void RemoveEntity(EntityId id);
     bool MoveEntity(EntityId id, Coordinate newAnchor);
     Entity *GetEntity(EntityId id);
     const std::vector<Entity *> &GetAllEntities() const;
 
-    // Движение и тик
+    // Движение
     void SetVelocity(EntityId id, double newVelX, double newVelY);
+
+    // Тик
     void Tick(double dt);
+
+    // Поиск
+    std::vector<Entity *> GetEntitiesInRect(int32_t minX, int32_t minY, int32_t maxX, int32_t maxY, uint32_t flags = 0);
+    std::vector<Entity *> GetEntitiesInRadius(Coordinate center, int32_t radius, uint32_t flags = 0);
+    std::vector<Entity *> GetEntitiesInSquare(Coordinate center, int32_t halfSize, uint32_t flags = 0);
+    Entity *RaycastFirst(Coordinate from, Coordinate to, uint32_t flags);
 
 private:
     Chunk *GetChunkByChunkCoords(int32_t chunkX, int32_t chunkY);
@@ -50,7 +65,6 @@ private:
         int32_t result = tileCoord / CHUNK_SIZE;
         if (tileCoord % CHUNK_SIZE != 0 && tileCoord < 0)
             --result;
-
         return result;
     }
 };
