@@ -17,11 +17,16 @@ namespace python_runtime
     static py::module_::module_def wfz_core_mod_def;
     static std::unique_ptr<py::scoped_interpreter> g_interpreter;
 
-    PyMODINIT_FUNC PyInit__core_impl()
+    PyMODINIT_FUNC PyInit_core_bindings()
     {
-        auto m = py::module_::create_extension_module("wfz._core", nullptr, &wfz_core_mod_def);
+        pybind11::module_ m = py::module_::create_extension_module("wfz._core", nullptr, &wfz_core_mod_def);
         register_bindings(m);
         return m.ptr();
+    }
+
+    void _InitModules()
+    {
+        PyImport_AppendInittab("wfz._core", &PyInit_core_bindings);
     }
 
     bool Init(const std::string &scriptDir)
@@ -29,7 +34,8 @@ namespace python_runtime
         if (g_interpreter)
             return false;
 
-        PyImport_AppendInittab("wfz._core", &PyInit__core_impl);
+        _InitModules();
+
         setenv("PYTHONPATH", scriptDir.c_str(), 1);
 
         g_interpreter = std::make_unique<py::scoped_interpreter>();
