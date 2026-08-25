@@ -5,7 +5,7 @@
 namespace python_runtime
 {
     /// @brief Инициализатор python
-    /// @param scriptDir 
+    /// @param scriptDir Путь до файла с exe сервера
     /// @return Возвращает true при успехе
     bool Init(const std::string &scriptDir);
 
@@ -14,6 +14,6 @@ namespace python_runtime
     /// @return Возвращает true при успехе
     bool RunFile(const std::string &path);
 
+    /// @brief Финализатор
     void Shutdown();
-
 }

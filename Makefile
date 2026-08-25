@@ -90,12 +90,13 @@ release: $(RELEASE_OBJS)
 # Создание папки распространения
 dist: release
 	@rm -rf $(DIST_DIR)
-	@mkdir -p $(DIST_DIR)
 	@mkdir -p $(DIST_DIR)/wfz
+	@mkdir -p $(DIST_DIR)/main
 	cp $(TARGET) $(DIST_DIR)/
 	@rm -f $(TARGET)
 	cp $(PYI_DIR)/*.pyi $(DIST_DIR)/wfz/ 2>/dev/null || true
 	cp $(PYI_DIR)/*.py $(DIST_DIR)/wfz/ 2>/dev/null || true
+	@touch $(DIST_DIR)/main/autorun.py
 	@echo "Дистрибутив собран в $(DIST_DIR)/"
 
 # Зависимости
