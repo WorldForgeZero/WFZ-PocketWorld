@@ -42,8 +42,8 @@ INCLUDE_DIRS := $(shell find $(SRC_DIR) $(LIB_DIR) $(EXCLUDE_DIRS) -o -type d -e
 COMMON_CXXFLAGS = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(PYBIND11_INCLUDE) $(INCLUDE_DIRS) -std=c++17
 COMMON_CFLAGS   = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(INCLUDE_DIRS)
 
-DEBUG_CXXFLAGS   = $(COMMON_CXXFLAGS) -g -O0
-DEBUG_CFLAGS     = $(COMMON_CFLAGS) -g -O0
+DEBUG_CXXFLAGS = $(filter-out -DNDEBUG, $(COMMON_CXXFLAGS)) -g -O0
+DEBUG_CFLAGS   = $(filter-out -DNDEBUG, $(COMMON_CFLAGS)) -g -O0
 
 RELEASE_CXXFLAGS = $(COMMON_CXXFLAGS) -g -O3 -flto -fomit-frame-pointer -DNDEBUG
 RELEASE_CFLAGS   = $(COMMON_CFLAGS) -g -O3 -flto -fomit-frame-pointer -DNDEBUG
@@ -54,7 +54,7 @@ DEBUG_LDFLAGS   = $(BASE_LDFLAGS)
 RELEASE_LDFLAGS = $(BASE_LDFLAGS) -flto
 
 # Цели
-.PHONY: all debug release clean clear dist
+.PHONY: all debug release clean clear dist dist-release
 
 all: debug
 clear: clean
@@ -87,8 +87,9 @@ debug: $(DEBUG_OBJS)
 release: $(RELEASE_OBJS)
 	$(CXX) $(RELEASE_OBJS) $(RELEASE_LDFLAGS) -o $(TARGET)
 
-# Создание папки распространения
-dist: release
+DIST_MODE ?= debug
+
+dist: $(DIST_MODE)
 	@rm -rf $(DIST_DIR)
 	@mkdir -p $(DIST_DIR)/wfz
 	@mkdir -p $(DIST_DIR)/main
@@ -97,7 +98,10 @@ dist: release
 	cp $(PYI_DIR)/*.pyi $(DIST_DIR)/wfz/ 2>/dev/null || true
 	cp $(PYI_DIR)/*.py $(DIST_DIR)/wfz/ 2>/dev/null || true
 	@touch $(DIST_DIR)/main/autorun.py
-	@echo "Дистрибутив собран в $(DIST_DIR)/"
+	@echo "Дистрибутив собран в $(DIST_DIR)/ (режим: $(DIST_MODE))"
+
+dist-release:
+	$(MAKE) dist DIST_MODE=release
 
 # Зависимости
 -include build/debug/*.d build/release/*.d

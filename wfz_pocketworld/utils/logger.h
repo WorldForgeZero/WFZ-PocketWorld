@@ -91,28 +91,50 @@ inline void Logger::log(LogLevel level, const std::string &tag, const std::strin
     auto now = std::chrono::system_clock::now();
     auto timeT = std::chrono::system_clock::to_time_t(now);
     std::tm tmBuf{};
-
-#ifdef _WIN32
-    localtime_s(&tmBuf, &timeT);
-#else
     localtime_r(&timeT, &tmBuf);
-#endif
 
     std::ostringstream line;
-    line << std::put_time(&tmBuf, "%Y-%m-%d %H:%M:%S")
-         << " [" << levelToString(level) << "] "
-         << "[" << tag << "] " << message << "\n";
+    line << std::put_time(&tmBuf, "%Y-%m-%d %H:%M:%S");
+
+    const char *color = "";
+    const char *reset = "\033[0m";
+    switch (level)
+    {
+    case LogLevel::Debug:
+        color = "\033[36m";
+        break;
+
+    case LogLevel::Info:
+        color = "\033[32m";
+        break;
+
+    case LogLevel::Warning:
+        color = "\033[33m";
+        break;
+
+    case LogLevel::Error:
+        color = "\033[31m";
+        break;
+
+    case LogLevel::Fatal:
+        color = "\033[1;31m";
+        break;
+    }
 
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (level >= LogLevel::Error)
-        std::cerr << line.str();
-
-    else
-        std::cout << line.str();
+    std::cout << line.str()
+              << " [" << color << levelToString(level) << reset << "]"
+              << " [" << tag << "] "
+              << message
+              << std::endl;
 
     if (fileStream_.is_open())
-        fileStream_ << line.str() << std::flush;
+        fileStream_ << line.str()
+                    << " [" << levelToString(level) << "] "
+                    << "[" << tag << "] "
+                    << message
+                    << "\n";
 }
 
 #ifdef NDEBUG

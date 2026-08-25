@@ -22,6 +22,8 @@ fs::path GetCurrentDirectory(char *argv[])
 
 int main(int argc, char *argv[])
 {
+    (void)argc;
+
     Logger::instance().setLevel(LogLevel::Debug);
 
     fs::path exeDir = GetCurrentDirectory(argv);
@@ -43,6 +45,7 @@ int main(int argc, char *argv[])
         std::cout << "Файл /main/autorun.py не найден." << std::endl;
         return 1;
     }
+    LOG_DEBUG("main", "/main/autorun.py отработал");
 
     // TODO: Сделать запуск сервера вебсокетов
 
