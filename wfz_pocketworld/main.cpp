@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "python/python_runtime.h"
+#include "utils/logger.h"
 
 namespace fs = std::filesystem;
 
@@ -21,6 +22,8 @@ fs::path GetCurrentDirectory(char *argv[])
 
 int main(int argc, char *argv[])
 {
+    Logger::instance().setLevel(LogLevel::Debug);
+
     fs::path exeDir = GetCurrentDirectory(argv);
 
     if (!python_runtime::Init(exeDir.string()))
