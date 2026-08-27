@@ -14,8 +14,41 @@
 class World
 {
 private:
+    struct SpawnCommand
+    {
+        uint32_t type;
+        uint32_t flags;
+        Coordinate anchor;
+        uint8_t rotation;
+        const EntityShape *footprint;
+    };
+
+    struct RemoveCommand
+    {
+        EntityId id;
+    };
+
+    struct MoveCommand
+    {
+        EntityId id;
+        Coordinate newAnchor;
+    };
+
     std::unordered_map<ChunkKey, std::unique_ptr<Chunk>> chunks_;
     EntityManager entityManager_;
+
+    // Очереди команд
+    std::vector<SpawnCommand> spawnQueue_;
+    std::vector<RemoveCommand> removeQueue_;
+    std::vector<MoveCommand> moveQueue_;
+
+    // Немедленные операции
+    EntityId SpawnEntityImmediate(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint);
+    void RemoveEntityImmediate(EntityId id);
+    bool MoveEntityImmediate(EntityId id, Coordinate newAnchor);
+
+    // Применение очередей
+    void FlushCommands();
 
 public:
     World() = default;
@@ -39,10 +72,12 @@ public:
     void SetFloor(int32_t x, int32_t y, uint16_t type);
     void RemoveFloor(int32_t x, int32_t y);
 
-    // Сущности
-    EntityId SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation = 0, const EntityShape *footprint = nullptr);
-    void RemoveEntity(EntityId id);
-    bool MoveEntity(EntityId id, Coordinate newAnchor);
+    // Публичные методы-очереди (для Python/внешнего API)
+    void QueueSpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation = 0, const EntityShape *footprint = nullptr);
+    void QueueRemoveEntity(EntityId id);
+    void QueueMoveEntity(EntityId id, Coordinate newAnchor);
+
+    // Доступ к сущностям
     Entity *GetEntity(EntityId id);
     const std::vector<Entity *> &GetAllEntities() const;
 
