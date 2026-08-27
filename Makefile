@@ -1,3 +1,4 @@
+PYTHON = .venv/bin/python3
 
 # Параметры Python
 PY_CFLAGS  := $(shell $(PYTHON) -c "import sysconfig; print(sysconfig.get_config_var('CFLAGS') or '')")
@@ -107,5 +108,7 @@ dist-release:
 
 # Очистка
 clean:
-	rm -rf build/ $(TARGET) $(DIST_DIR)
-	find $(SRC_DIR) -type f \( -name '*.o' -o -name '*.d' \) -delete
+	rm -f $(TARGET)
+	rm -rf $(DIST_DIR)
+	rm -rf build/debug/wfz_pocketworld build/release/wfz_pocketworld
+	find build -type d -empty -delete 2>/dev/null || true
