@@ -1,4 +1,5 @@
 PYTHON = .venv/bin/python3
+MAKEFLAGS += -j$(shell nproc 2>/dev/null || echo 4)
 
 # Параметры Python
 PY_CFLAGS  := $(shell $(PYTHON) -c "import sysconfig; print(sysconfig.get_config_var('CFLAGS') or '')")
