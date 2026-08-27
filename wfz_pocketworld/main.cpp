@@ -42,10 +42,13 @@ int main(int argc, char *argv[])
     }
     else
     {
+#ifdef NDEBUG
         LOG_ERROR("server.main_init_func", "Файл /main/autorun.py не найден.");
         return 1;
+#else
+        LOG_DEBUG("server.main_init_func", "Файл /main/autorun.py не найден. Досрочный выход проигнорирован в связи с debug сборкой");
+#endif
     }
-    LOG_DEBUG("main", "/main/autorun.py отработал");
 
     // TODO: Сделать запуск сервера вебсокетов
 

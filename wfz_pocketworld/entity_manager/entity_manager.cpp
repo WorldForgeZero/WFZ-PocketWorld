@@ -29,7 +29,6 @@ EntityUid EntityManager::SpawnEntity(World &world, uint32_t type, uint32_t flags
 
     Chunk &chunk = world.GetOrCreateChunk(anchor.x, anchor.y);
 
-    // Присваиваем индекс в entities_
     rawEntity->id = static_cast<EntityIndex>(entities_.size());
     rawEntity->chunk = &chunk;
 
@@ -54,15 +53,13 @@ void EntityManager::RemoveEntity(World &world, EntityUid uid)
     auto occupied = entity->GetOccupiedTiles();
     RemoveFromTileOccupancy(world, entity, occupied);
 
-    // Удаляем из entities_ (swap-pop)
     EntityIndex idx = entity->id;
     Entity *last = entities_.back();
     entities_[idx] = last;
     last->id = idx;
     entities_.pop_back();
 
-    // Удаляем из movingEntities_, если движется
-    if (entity->HasFlag(ENTITY_MOVING))
+    if (entity->HasFlag(EntityFlags::MOVING))
     {
         EntityIndex movingIdx = entity->movingIndex;
         Entity *lastMoving = movingEntities_.back();
@@ -93,7 +90,7 @@ bool EntityManager::TryMoveEntityToTile(World &world, EntityUid uid, Coordinate 
     auto newOccupied = entity->GetOccupiedTiles();
     entity->anchor = oldAnchor;
 
-    if (!entity->HasFlag(ENTITY_EPHEMERAL))
+    if (!entity->HasFlag(EntityFlags::EPHEMERAL))
     {
         for (const auto &tc : newOccupied)
         {
@@ -158,8 +155,15 @@ void EntityManager::AddToTileOccupancy(World &world, Entity *entity, const std::
 
         Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
         tile.occupyingEntities.push_back(entity);
-        if (entity->HasFlag(ENTITY_SOLID))
+        if (entity->HasFlag(EntityFlags::SOLID))
+        {
             tile.solidCount++;
+        }
+
+        if (entity->HasFlag(EntityFlags::ZONE_BLOCKER))
+        {
+            world.NotifyZoneBlockerChanged(globalCoord);
+        }
     }
 }
 
@@ -181,11 +185,18 @@ void EntityManager::RemoveFromTileOccupancy(World &world, Entity *entity, const 
         auto it = std::find(vec.begin(), vec.end(), entity);
         if (it != vec.end())
         {
-            if (entity->HasFlag(ENTITY_SOLID))
+            if (entity->HasFlag(EntityFlags::SOLID))
+            {
                 tile.solidCount--;
+            }
 
             std::swap(*it, vec.back());
             vec.pop_back();
+
+            if (entity->HasFlag(EntityFlags::ZONE_BLOCKER))
+            {
+                world.NotifyZoneBlockerChanged(globalCoord);
+            }
         }
     }
 }
@@ -213,7 +224,7 @@ void EntityManager::SetVelocity(EntityUid uid, double newVelX, double newVelY)
 
     Entity *entity = it->second;
 
-    bool wasMoving = entity->HasFlag(ENTITY_MOVING);
+    bool wasMoving = entity->HasFlag(EntityFlags::MOVING);
     bool willMove = (newVelX != 0.0 || newVelY != 0.0);
 
     entity->velX = newVelX;
@@ -221,7 +232,7 @@ void EntityManager::SetVelocity(EntityUid uid, double newVelX, double newVelY)
 
     if (!wasMoving && willMove)
     {
-        entity->AddFlag(ENTITY_MOVING);
+        entity->AddFlag(EntityFlags::MOVING);
         entity->movingIndex = static_cast<EntityIndex>(movingEntities_.size());
         movingEntities_.push_back(entity);
     }
@@ -235,7 +246,7 @@ void EntityManager::SetVelocity(EntityUid uid, double newVelX, double newVelY)
 
         movingEntities_.pop_back();
 
-        entity->RemoveFlag(ENTITY_MOVING);
+        entity->RemoveFlag(EntityFlags::MOVING);
     }
 }
 
@@ -300,7 +311,7 @@ void EntityManager::UpdateMovement(World &world, double dt)
 
             movingEntities_.pop_back();
 
-            entity->RemoveFlag(ENTITY_MOVING);
+            entity->RemoveFlag(EntityFlags::MOVING);
             continue;
         }
 

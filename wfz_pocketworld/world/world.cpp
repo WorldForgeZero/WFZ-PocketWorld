@@ -25,6 +25,12 @@ void World::RemoveChunk(int32_t globalX, int32_t globalY)
     RemoveChunkByChunkCoords(chunkX, chunkY);
 }
 
+Chunk *World::GetChunkByChunkCoords(int32_t chunkX, int32_t chunkY)
+{
+    auto it = chunks_.find({chunkX, chunkY});
+    return (it != chunks_.end()) ? it->second.get() : nullptr;
+}
+
 Tile *World::GetTile(int32_t globalX, int32_t globalY)
 {
     Chunk *chunk = GetChunk(globalX, globalY);
@@ -57,7 +63,13 @@ void World::SetFloor(int32_t x, int32_t y, uint16_t type)
 
     if (tile)
     {
+        bool hadFloor = (tile->floorType != 0);
         tile->floorType = type;
+
+        if (!hadFloor)
+        {
+            zoneManager_.OnFloorChanged({x, y}, true);
+        }
     }
 }
 
@@ -66,7 +78,13 @@ void World::RemoveFloor(int32_t x, int32_t y)
     Tile *tile = GetTile(x, y);
     if (tile)
     {
+        bool hadFloor = (tile->floorType != 0);
         tile->floorType = 0;
+
+        if (hadFloor)
+        {
+            zoneManager_.OnFloorChanged({x, y}, false);
+        }
     }
 }
 
@@ -87,7 +105,7 @@ bool World::MoveEntityImmediate(EntityUid uid, Coordinate newAnchor)
 }
 
 // Публичные очереди
-void World::QueueSpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor,                             uint8_t rotation, const EntityShape *footprint)
+void World::QueueSpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)
 {
     spawnQueue_.push_back({type, flags, anchor, rotation, footprint});
 }
@@ -106,21 +124,15 @@ void World::QueueMoveEntity(EntityUid uid, Coordinate newAnchor)
 void World::FlushCommands()
 {
     for (const auto &cmd : removeQueue_)
-    {
         RemoveEntityImmediate(cmd.uid);
-    }
     removeQueue_.clear();
 
     for (const auto &cmd : spawnQueue_)
-    {
-        SpawnEntityImmediate(cmd.type, cmd.flags, cmd.anchor,                             cmd.rotation, cmd.footprint);
-    }
+        SpawnEntityImmediate(cmd.type, cmd.flags, cmd.anchor, cmd.rotation, cmd.footprint);
     spawnQueue_.clear();
 
     for (const auto &cmd : moveQueue_)
-    {
         MoveEntityImmediate(cmd.uid, cmd.newAnchor);
-    }
     moveQueue_.clear();
 }
 
@@ -140,15 +152,16 @@ void World::SetVelocity(EntityUid uid, double newVelX, double newVelY)
     entityManager_.SetVelocity(uid, newVelX, newVelY);
 }
 
-// Тик
+//
 void World::Tick(double dt)
 {
     FlushCommands();
 
     entityManager_.UpdateMovement(*this, dt);
+
+    zoneManager_.ProcessPendingChanges(*this);
 }
 
-// Поиск
 std::vector<Entity *> World::GetEntitiesInRect(int32_t minX, int32_t minY, int32_t maxX, int32_t maxY, uint32_t flags)
 {
     std::vector<Entity *> result;
@@ -248,13 +261,7 @@ Entity *World::RaycastFirst(Coordinate from, Coordinate to, uint32_t flags)
     return nullptr;
 }
 
-// Приватные методы чанков
-Chunk *World::GetChunkByChunkCoords(int32_t chunkX, int32_t chunkY)
-{
-    auto it = chunks_.find({chunkX, chunkY});
-    return (it != chunks_.end()) ? it->second.get() : nullptr;
-}
-
+// Приватные методы
 Chunk &World::GetOrCreateChunkByChunkCoords(int32_t chunkX, int32_t chunkY)
 {
     auto it = chunks_.find({chunkX, chunkY});
@@ -285,4 +292,17 @@ void World::RemoveChunkByChunkCoords(int32_t chunkX, int32_t chunkY)
     }
 
     chunks_.erase(it);
+}
+
+int32_t World::TileToChunkCoord(int32_t tileCoord)
+{
+    int32_t result = tileCoord / CHUNK_SIZE;
+    if (tileCoord % CHUNK_SIZE != 0 && tileCoord < 0)
+        --result;
+    return result;
+}
+
+void World::NotifyZoneBlockerChanged(Coordinate coord)
+{
+    zoneManager_.OnSolidChanged(coord);
 }

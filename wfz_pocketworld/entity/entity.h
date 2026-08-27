@@ -15,9 +15,10 @@ using EntityIndex = uint32_t;
 
 enum EntityFlags : uint32_t
 {
-    ENTITY_SOLID = 1 << 0,
-    ENTITY_EPHEMERAL = 1 << 1,
-    ENTITY_MOVING = 1 << 2,
+    SOLID = 1 << 0,
+    EPHEMERAL = 1 << 1,
+    MOVING = 1 << 2,
+    ZONE_BLOCKER = 1 << 3,
 };
 
 class Entity
