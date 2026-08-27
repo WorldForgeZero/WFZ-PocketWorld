@@ -2,6 +2,7 @@
 
 ## Использованные библиотеки
 - [IXWebSocket](https://github.com/machinezone/IXWebSocket) - Сетевые функции.
+- [SQLite3 амальгама](https://sqlite.org/index.html) - Встроенная база данных движка.
 
 ## Лицензия
 Движок распространяется под [AGPL-3.0](./LICENSE).
