@@ -9,15 +9,9 @@
 #include "tile.h"
 #include "world.h"
 
-EntityId EntityManager::SpawnEntity(
-    World &world,
-    uint32_t type,
-    uint32_t flags,
-    Coordinate anchor,
-    uint8_t rotation,
-    const EntityShape *footprint)
+EntityUid EntityManager::SpawnEntity(World &world, uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)
 {
-    auto entity = std::make_unique<Entity>(nextEntityId_++, type, flags, anchor, rotation, footprint);
+    auto entity = std::make_unique<Entity>(nextUid_, type, flags, anchor, rotation, footprint);
     Entity *rawEntity = entity.get();
 
     auto occupied = rawEntity->GetOccupiedTiles();
@@ -35,23 +29,23 @@ EntityId EntityManager::SpawnEntity(
 
     Chunk &chunk = world.GetOrCreateChunk(anchor.x, anchor.y);
 
-    // Устанавливаем чанк и индекс в entities_
+    // Присваиваем индекс в entities_
+    rawEntity->id = static_cast<EntityIndex>(entities_.size());
     rawEntity->chunk = &chunk;
-    rawEntity->entityIndex = entities_.size();
 
     chunk.AddEntity(std::move(entity));
     entities_.push_back(rawEntity);
-    entityIndex_[rawEntity->id] = rawEntity;
+    entityByUid_[rawEntity->uid] = rawEntity;
 
     AddToTileOccupancy(world, rawEntity, occupied);
 
-    return rawEntity->id;
+    return rawEntity->uid;
 }
 
-void EntityManager::RemoveEntity(World &world, EntityId id)
+void EntityManager::RemoveEntity(World &world, EntityUid uid)
 {
-    auto entIt = entityIndex_.find(id);
-    if (entIt == entityIndex_.end())
+    auto entIt = entityByUid_.find(uid);
+    if (entIt == entityByUid_.end())
         return;
 
     Entity *entity = entIt->second;
@@ -60,33 +54,33 @@ void EntityManager::RemoveEntity(World &world, EntityId id)
     auto occupied = entity->GetOccupiedTiles();
     RemoveFromTileOccupancy(world, entity, occupied);
 
-    // Удаляем из entities_ (O(1))
-    size_t idx = entity->entityIndex;
+    // Удаляем из entities_ (swap-pop)
+    EntityIndex idx = entity->id;
     Entity *last = entities_.back();
     entities_[idx] = last;
-    last->entityIndex = idx;
+    last->id = idx;
     entities_.pop_back();
 
-    // Если entity движется, удаляем из movingEntities_ (O(1))
-    if (entity->isMoving)
+    // Удаляем из movingEntities_, если движется
+    if (entity->HasFlag(ENTITY_MOVING))
     {
-        size_t movingIdx = entity->movingIndex;
+        EntityIndex movingIdx = entity->movingIndex;
         Entity *lastMoving = movingEntities_.back();
         movingEntities_[movingIdx] = lastMoving;
         if (lastMoving != entity)
             lastMoving->movingIndex = movingIdx;
+
         movingEntities_.pop_back();
     }
 
     chunk->RemoveEntity(entity);
-
-    entityIndex_.erase(entIt);
+    entityByUid_.erase(entIt);
 }
 
-bool EntityManager::TryMoveEntityToTile(World &world, EntityId id, Coordinate newAnchor)
+bool EntityManager::TryMoveEntityToTile(World &world, EntityUid uid, Coordinate newAnchor)
 {
-    auto entIt = entityIndex_.find(id);
-    if (entIt == entityIndex_.end())
+    auto entIt = entityByUid_.find(uid);
+    if (entIt == entityByUid_.end())
         return false;
 
     Entity *entity = entIt->second;
@@ -124,7 +118,7 @@ bool EntityManager::TryMoveEntityToTile(World &world, EntityId id, Coordinate ne
     {
         auto uniqueEntity = oldChunk->RemoveEntity(entity);
         Chunk &newChunk = world.GetOrCreateChunk(newAnchor.x, newAnchor.y);
-        entity->chunk = &newChunk; // обновляем указатель на чанк
+        entity->chunk = &newChunk;
         newChunk.AddEntity(std::move(uniqueEntity));
     }
 
@@ -132,25 +126,24 @@ bool EntityManager::TryMoveEntityToTile(World &world, EntityId id, Coordinate ne
     return true;
 }
 
-bool EntityManager::MoveEntity(World &world, EntityId id, Coordinate newAnchor)
+bool EntityManager::MoveEntity(World &world, EntityUid uid, Coordinate newAnchor)
 {
-    if (!TryMoveEntityToTile(world, id, newAnchor))
+    if (!TryMoveEntityToTile(world, uid, newAnchor))
         return false;
 
-    Entity *entity = entityIndex_[id];
+    Entity *entity = entityByUid_[uid];
     entity->pos.SetX(newAnchor.x * VECTOR2D_FIXED_SCALE);
     entity->pos.SetY(newAnchor.y * VECTOR2D_FIXED_SCALE);
     return true;
 }
 
-Entity *EntityManager::GetEntity(EntityId id)
+Entity *EntityManager::GetEntity(EntityUid uid)
 {
-    auto it = entityIndex_.find(id);
-    return (it != entityIndex_.end()) ? it->second : nullptr;
+    auto it = entityByUid_.find(uid);
+    return (it != entityByUid_.end()) ? it->second : nullptr;
 }
 
-void EntityManager::AddToTileOccupancy(World &world, Entity *entity,
-                                       const std::vector<Coordinate> &occupiedTiles)
+void EntityManager::AddToTileOccupancy(World &world, Entity *entity, const std::vector<Coordinate> &occupiedTiles)
 {
     for (const auto &globalCoord : occupiedTiles)
     {
@@ -163,16 +156,14 @@ void EntityManager::AddToTileOccupancy(World &world, Entity *entity,
         int32_t localX = globalCoord.x - (chunkX << CHUNK_SHIFT);
         int32_t localY = globalCoord.y - (chunkY << CHUNK_SHIFT);
 
-        Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX),
-                                    static_cast<uint32_t>(localY));
+        Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
         tile.occupyingEntities.push_back(entity);
         if (entity->HasFlag(ENTITY_SOLID))
             tile.solidCount++;
     }
 }
 
-void EntityManager::RemoveFromTileOccupancy(World &world, Entity *entity,
-                                            const std::vector<Coordinate> &occupiedTiles)
+void EntityManager::RemoveFromTileOccupancy(World &world, Entity *entity, const std::vector<Coordinate> &occupiedTiles)
 {
     for (const auto &globalCoord : occupiedTiles)
     {
@@ -185,8 +176,7 @@ void EntityManager::RemoveFromTileOccupancy(World &world, Entity *entity,
         int32_t localX = globalCoord.x - (chunkX << CHUNK_SHIFT);
         int32_t localY = globalCoord.y - (chunkY << CHUNK_SHIFT);
 
-        Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX),
-                                    static_cast<uint32_t>(localY));
+        Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
         auto &vec = tile.occupyingEntities;
         auto it = std::find(vec.begin(), vec.end(), entity);
         if (it != vec.end())
@@ -211,20 +201,19 @@ bool EntityManager::IsTileBlocked(World &world, Coordinate coord)
     int32_t localX = coord.x - (chunkX << CHUNK_SHIFT);
     int32_t localY = coord.y - (chunkY << CHUNK_SHIFT);
 
-    Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX),
-                                static_cast<uint32_t>(localY));
+    Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
     return tile.solidCount > 0;
 }
 
-void EntityManager::SetVelocity(EntityId id, double newVelX, double newVelY)
+void EntityManager::SetVelocity(EntityUid uid, double newVelX, double newVelY)
 {
-    auto it = entityIndex_.find(id);
-    if (it == entityIndex_.end())
+    auto it = entityByUid_.find(uid);
+    if (it == entityByUid_.end())
         return;
 
     Entity *entity = it->second;
 
-    bool wasMoving = entity->isMoving;
+    bool wasMoving = entity->HasFlag(ENTITY_MOVING);
     bool willMove = (newVelX != 0.0 || newVelY != 0.0);
 
     entity->velX = newVelX;
@@ -232,21 +221,21 @@ void EntityManager::SetVelocity(EntityId id, double newVelX, double newVelY)
 
     if (!wasMoving && willMove)
     {
-        entity->isMoving = true;
-        entity->movingIndex = movingEntities_.size();
+        entity->AddFlag(ENTITY_MOVING);
+        entity->movingIndex = static_cast<EntityIndex>(movingEntities_.size());
         movingEntities_.push_back(entity);
     }
     else if (wasMoving && !willMove)
     {
-        // Удаляем из movingEntities_ O(1)
-        size_t idx = entity->movingIndex;
+        EntityIndex idx = entity->movingIndex;
         Entity *lastMoving = movingEntities_.back();
         movingEntities_[idx] = lastMoving;
         if (lastMoving != entity)
             lastMoving->movingIndex = idx;
+
         movingEntities_.pop_back();
 
-        entity->isMoving = false;
+        entity->RemoveFlag(ENTITY_MOVING);
     }
 }
 
@@ -271,7 +260,6 @@ void EntityManager::UpdateMovement(World &world, double dt)
         }
 
         int32_t steps = std::max(std::abs(stepX), std::abs(stepY)) / MAX_STEP + 1;
-
         int32_t subStepX = stepX / steps;
         int32_t subStepY = stepY / steps;
 
@@ -285,12 +273,11 @@ void EntityManager::UpdateMovement(World &world, double dt)
             int32_t newAnchorX = newPosX / VECTOR2D_FIXED_SCALE;
             int32_t newAnchorY = newPosY / VECTOR2D_FIXED_SCALE;
 
-            bool tileChanged = (newAnchorX != entity->anchor.x ||
-                                newAnchorY != entity->anchor.y);
+            bool tileChanged = (newAnchorX != entity->anchor.x || newAnchorY != entity->anchor.y);
 
             if (tileChanged)
             {
-                if (!TryMoveEntityToTile(world, entity->id, {newAnchorX, newAnchorY}))
+                if (!TryMoveEntityToTile(world, entity->uid, {newAnchorX, newAnchorY}))
                 {
                     entity->velX = 0.0;
                     entity->velY = 0.0;
@@ -305,15 +292,15 @@ void EntityManager::UpdateMovement(World &world, double dt)
 
         if (stopped || (entity->velX == 0.0 && entity->velY == 0.0))
         {
-            // Удаляем из movingEntities_ O(1)
-            size_t idx = entity->movingIndex;
+            EntityIndex idx = entity->movingIndex;
             Entity *lastMoving = movingEntities_.back();
             movingEntities_[idx] = lastMoving;
             if (lastMoving != entity)
                 lastMoving->movingIndex = idx;
+
             movingEntities_.pop_back();
 
-            entity->isMoving = false;
+            entity->RemoveFlag(ENTITY_MOVING);
             continue;
         }
 

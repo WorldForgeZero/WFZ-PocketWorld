@@ -10,46 +10,41 @@
 
 class Chunk;
 
-using EntityId = uint32_t;
+using EntityUid = uint32_t;
+using EntityIndex = uint32_t;
 
 enum EntityFlags : uint32_t
 {
     ENTITY_SOLID = 1 << 0,
     ENTITY_EPHEMERAL = 1 << 1,
+    ENTITY_MOVING = 1 << 2,
 };
 
 class Entity
 {
 public:
-    uint32_t id;
+    EntityUid uid;           // уникальный, не переиспользуется
+    EntityIndex id;          // индекс в entities_
+    EntityIndex movingIndex; // индекс в movingEntities_
+
     uint32_t type;
     uint32_t flags;
 
-    Coordinate anchor; // тайловая координата
-    Vector2D pos;      // fixed-point позиция (1 тайл = VECTOR2D_FIXED_SCALE)
+    Resistance res;
     uint8_t rotation;
+
     double velX = 0.0;
     double velY = 0.0;
-    Resistance res;
+
+    Coordinate anchor;
+    Vector2D pos;
 
     const EntityShape *footprint;
 
-    // Индексы для O(1) удаления из векторов EntityManager
-    size_t entityIndex; // позиция в entities_
-    size_t movingIndex; // позиция в movingEntities_
-    bool isMoving;      // находится ли в movingEntities_
-
-    // Чанк, в котором сущность находится
     Chunk *chunk;
 
 public:
-    Entity(
-        uint32_t id,
-        uint32_t type,
-        uint32_t flags,
-        Coordinate anchor,
-        uint8_t rotation = 0,
-        const EntityShape *footprint = nullptr);
+    Entity(EntityUid uid, uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation = 0, const EntityShape *footprint = nullptr);
 
     Entity(const Entity &) = delete;
     Entity &operator=(const Entity &) = delete;

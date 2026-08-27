@@ -71,63 +71,63 @@ void World::RemoveFloor(int32_t x, int32_t y)
 }
 
 // Немедленные операции
-EntityId World::SpawnEntityImmediate(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)
+EntityUid World::SpawnEntityImmediate(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)
 {
     return entityManager_.SpawnEntity(*this, type, flags, anchor, rotation, footprint);
 }
 
-void World::RemoveEntityImmediate(EntityId id)
+void World::RemoveEntityImmediate(EntityUid uid)
 {
-    entityManager_.RemoveEntity(*this, id);
+    entityManager_.RemoveEntity(*this, uid);
 }
 
-bool World::MoveEntityImmediate(EntityId id, Coordinate newAnchor)
+bool World::MoveEntityImmediate(EntityUid uid, Coordinate newAnchor)
 {
-    return entityManager_.MoveEntity(*this, id, newAnchor);
+    return entityManager_.MoveEntity(*this, uid, newAnchor);
 }
 
 // Публичные очереди
-void World::QueueSpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)
+void World::QueueSpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor,                             uint8_t rotation, const EntityShape *footprint)
 {
     spawnQueue_.push_back({type, flags, anchor, rotation, footprint});
 }
 
-void World::QueueRemoveEntity(EntityId id)
+void World::QueueRemoveEntity(EntityUid uid)
 {
-    removeQueue_.push_back({id});
+    removeQueue_.push_back({uid});
 }
 
-void World::QueueMoveEntity(EntityId id, Coordinate newAnchor)
+void World::QueueMoveEntity(EntityUid uid, Coordinate newAnchor)
 {
-    moveQueue_.push_back({id, newAnchor});
+    moveQueue_.push_back({uid, newAnchor});
 }
 
-//  Применение очередей
+// Применение очередей
 void World::FlushCommands()
 {
     for (const auto &cmd : removeQueue_)
     {
-        RemoveEntityImmediate(cmd.id);
+        RemoveEntityImmediate(cmd.uid);
     }
     removeQueue_.clear();
 
     for (const auto &cmd : spawnQueue_)
     {
-        SpawnEntityImmediate(cmd.type, cmd.flags, cmd.anchor, cmd.rotation, cmd.footprint);
+        SpawnEntityImmediate(cmd.type, cmd.flags, cmd.anchor,                             cmd.rotation, cmd.footprint);
     }
     spawnQueue_.clear();
 
     for (const auto &cmd : moveQueue_)
     {
-        MoveEntityImmediate(cmd.id, cmd.newAnchor);
+        MoveEntityImmediate(cmd.uid, cmd.newAnchor);
     }
     moveQueue_.clear();
 }
 
 // Доступ к сущностям
-Entity *World::GetEntity(EntityId id)
+Entity *World::GetEntity(EntityUid uid)
 {
-    return entityManager_.GetEntity(id);
+    return entityManager_.GetEntity(uid);
 }
 
 const std::vector<Entity *> &World::GetAllEntities() const
@@ -135,9 +135,9 @@ const std::vector<Entity *> &World::GetAllEntities() const
     return entityManager_.GetAll();
 }
 
-void World::SetVelocity(EntityId id, double newVelX, double newVelY)
+void World::SetVelocity(EntityUid uid, double newVelX, double newVelY)
 {
-    entityManager_.SetVelocity(id, newVelX, newVelY);
+    entityManager_.SetVelocity(uid, newVelX, newVelY);
 }
 
 // Тик
@@ -273,15 +273,15 @@ void World::RemoveChunkByChunkCoords(int32_t chunkX, int32_t chunkY)
     if (it == chunks_.end())
         return;
 
-    std::vector<EntityId> ids;
+    std::vector<EntityUid> uids;
     for (const auto &entity : it->second->GetEntities())
     {
-        ids.push_back(entity->id);
+        uids.push_back(entity->uid);
     }
 
-    for (EntityId id : ids)
+    for (EntityUid uid : uids)
     {
-        entityManager_.RemoveEntity(*this, id);
+        entityManager_.RemoveEntity(*this, uid);
     }
 
     chunks_.erase(it);

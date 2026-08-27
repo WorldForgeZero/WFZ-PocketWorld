@@ -25,12 +25,12 @@ private:
 
     struct RemoveCommand
     {
-        EntityId id;
+        EntityUid uid;
     };
 
     struct MoveCommand
     {
-        EntityId id;
+        EntityUid uid;
         Coordinate newAnchor;
     };
 
@@ -43,9 +43,9 @@ private:
     std::vector<MoveCommand> moveQueue_;
 
     // Немедленные операции
-    EntityId SpawnEntityImmediate(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint);
-    void RemoveEntityImmediate(EntityId id);
-    bool MoveEntityImmediate(EntityId id, Coordinate newAnchor);
+    EntityUid SpawnEntityImmediate(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint);
+    void RemoveEntityImmediate(EntityUid uid);
+    bool MoveEntityImmediate(EntityUid uid, Coordinate newAnchor);
 
     // Применение очередей
     void FlushCommands();
@@ -74,15 +74,15 @@ public:
 
     // Публичные методы-очереди (для Python/внешнего API)
     void QueueSpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation = 0, const EntityShape *footprint = nullptr);
-    void QueueRemoveEntity(EntityId id);
-    void QueueMoveEntity(EntityId id, Coordinate newAnchor);
+    void QueueRemoveEntity(EntityUid uid);
+    void QueueMoveEntity(EntityUid uid, Coordinate newAnchor);
 
     // Доступ к сущностям
-    Entity *GetEntity(EntityId id);
+    Entity *GetEntity(EntityUid uid);
     const std::vector<Entity *> &GetAllEntities() const;
 
     // Движение
-    void SetVelocity(EntityId id, double newVelX, double newVelY);
+    void SetVelocity(EntityUid uid, double newVelX, double newVelY);
 
     // Тик
     void Tick(double dt);
