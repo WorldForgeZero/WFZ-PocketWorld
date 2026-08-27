@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     if (!python_runtime::Init(exeDir.string()))
     {
-        std::cerr << "Не удалось инициализировать Python" << std::endl;
+        LOG_ERROR("server.main_init_func", "Не удалось инициализировать Python");
         return 1;
     }
 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        std::cout << "Файл /main/autorun.py не найден." << std::endl;
+        LOG_ERROR("server.main_init_func", "Файл /main/autorun.py не найден.");
         return 1;
     }
     LOG_DEBUG("main", "/main/autorun.py отработал");
