@@ -144,16 +144,12 @@ void EntityManager::AddToTileOccupancy(World &world, Entity *entity, const std::
 {
     for (const auto &globalCoord : occupiedTiles)
     {
-        Chunk *chunk = world.GetChunk(globalCoord.x, globalCoord.y);
+        int32_t lx, ly;
+        Chunk *chunk = world.GetChunkAndLocalCoords(globalCoord.x, globalCoord.y, lx, ly);
         if (!chunk)
             continue;
 
-        int32_t chunkX = globalCoord.x >> CHUNK_SHIFT;
-        int32_t chunkY = globalCoord.y >> CHUNK_SHIFT;
-        int32_t localX = globalCoord.x - (chunkX << CHUNK_SHIFT);
-        int32_t localY = globalCoord.y - (chunkY << CHUNK_SHIFT);
-
-        Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
+        Tile &tile = chunk->GetTile(lx, ly);
         tile.occupyingEntities.push_back(entity);
         if (entity->HasFlag(EntityFlags::SOLID))
         {
@@ -171,16 +167,12 @@ void EntityManager::RemoveFromTileOccupancy(World &world, Entity *entity, const 
 {
     for (const auto &globalCoord : occupiedTiles)
     {
-        Chunk *chunk = world.GetChunk(globalCoord.x, globalCoord.y);
+        int32_t lx, ly;
+        Chunk *chunk = world.GetChunkAndLocalCoords(globalCoord.x, globalCoord.y, lx, ly);
         if (!chunk)
             continue;
 
-        int32_t chunkX = globalCoord.x >> CHUNK_SHIFT;
-        int32_t chunkY = globalCoord.y >> CHUNK_SHIFT;
-        int32_t localX = globalCoord.x - (chunkX << CHUNK_SHIFT);
-        int32_t localY = globalCoord.y - (chunkY << CHUNK_SHIFT);
-
-        Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
+        Tile &tile = chunk->GetTile(lx, ly);
         auto &vec = tile.occupyingEntities;
         auto it = std::find(vec.begin(), vec.end(), entity);
         if (it != vec.end())
@@ -203,16 +195,12 @@ void EntityManager::RemoveFromTileOccupancy(World &world, Entity *entity, const 
 
 bool EntityManager::IsTileBlocked(World &world, Coordinate coord)
 {
-    Chunk *chunk = world.GetChunk(coord.x, coord.y);
+    int32_t lx, ly;
+    Chunk *chunk = world.GetChunkAndLocalCoords(coord.x, coord.y, lx, ly);
     if (!chunk)
         return false;
 
-    int32_t chunkX = coord.x >> CHUNK_SHIFT;
-    int32_t chunkY = coord.y >> CHUNK_SHIFT;
-    int32_t localX = coord.x - (chunkX << CHUNK_SHIFT);
-    int32_t localY = coord.y - (chunkY << CHUNK_SHIFT);
-
-    Tile &tile = chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
+    Tile &tile = chunk->GetTile(lx, ly);
     return tile.solidCount > 0;
 }
 

@@ -19,21 +19,26 @@ namespace
 
 bool ZoneManager::IsFloor(World &world, Coordinate coord) const
 {
-    Tile *tile = world.GetTile(coord.x, coord.y);
-    return tile && tile->floorType != 0;
+    int32_t lx, ly;
+    Chunk *chunk = world.GetChunkAndLocalCoords(coord.x, coord.y, lx, ly);
+    if (!chunk)
+        return false;
+
+    return chunk->GetTile(lx, ly).floorType != 0;
 }
 
 bool ZoneManager::HasBlocker(World &world, Coordinate coord) const
 {
-    Tile *tile = world.GetTile(coord.x, coord.y);
-    if (!tile)
+    int32_t lx, ly;
+    Chunk *chunk = world.GetChunkAndLocalCoords(coord.x, coord.y, lx, ly);
+    if (!chunk)
         return false;
 
-    for (Entity *e : tile->occupyingEntities)
-    {
+    Tile &tile = chunk->GetTile(lx, ly);
+    for (Entity *e : tile.occupyingEntities)
         if (e->HasFlag(EntityFlags::ZONE_BLOCKER))
             return true;
-    }
+
     return false;
 }
 
@@ -55,15 +60,16 @@ void ZoneManager::UpdateBorderForZone(World &world, uint32_t zoneId)
         for (int i = 0; i < 4; ++i)
         {
             Coordinate neigh{coord.x + dx[i], coord.y + dy[i]};
-
-            if (!world.GetChunk(neigh.x, neigh.y))
+            int32_t nlX, nlY;
+            Chunk *neighChunk = world.GetChunkAndLocalCoords(neigh.x, neigh.y, nlX, nlY);
+            if (!neighChunk)
             {
                 isBorder = true;
                 break;
             }
 
-            Tile *nt = world.GetTile(neigh.x, neigh.y);
-            if (!nt || nt->floorType == 0)
+            Tile &nt = neighChunk->GetTile(nlX, nlY);
+            if (nt.floorType == 0)
             {
                 isBorder = true;
                 break;

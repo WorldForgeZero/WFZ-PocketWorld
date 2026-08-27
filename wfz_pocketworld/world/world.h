@@ -65,6 +65,8 @@ public:
     Chunk &GetOrCreateChunk(int32_t globalX, int32_t globalY);
     void RemoveChunk(int32_t globalX, int32_t globalY);
 
+    Chunk *GetChunkAndLocalCoords(int32_t globalX, int32_t globalY, int32_t &localX, int32_t &localY);
+
     Chunk *GetChunkByChunkCoords(int32_t chunkX, int32_t chunkY);
 
     Tile *GetTile(int32_t globalX, int32_t globalY);

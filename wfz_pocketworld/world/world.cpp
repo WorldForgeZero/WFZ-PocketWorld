@@ -31,18 +31,26 @@ Chunk *World::GetChunkByChunkCoords(int32_t chunkX, int32_t chunkY)
     return (it != chunks_.end()) ? it->second.get() : nullptr;
 }
 
-Tile *World::GetTile(int32_t globalX, int32_t globalY)
+Chunk *World::GetChunkAndLocalCoords(int32_t globalX, int32_t globalY, int32_t &localX, int32_t &localY)
 {
-    Chunk *chunk = GetChunk(globalX, globalY);
+    int32_t chunkX = TileToChunkCoord(globalX);
+    int32_t chunkY = TileToChunkCoord(globalY);
+    Chunk *chunk = GetChunkByChunkCoords(chunkX, chunkY);
     if (!chunk)
         return nullptr;
 
-    int32_t chunkX = TileToChunkCoord(globalX);
-    int32_t chunkY = TileToChunkCoord(globalY);
-    int32_t localX = globalX - (chunkX << CHUNK_SHIFT);
-    int32_t localY = globalY - (chunkY << CHUNK_SHIFT);
+    localX = globalX - (chunkX << CHUNK_SHIFT);
+    localY = globalY - (chunkY << CHUNK_SHIFT);
+    return chunk;
+}
 
-    return &chunk->GetTile(static_cast<uint32_t>(localX), static_cast<uint32_t>(localY));
+Tile *World::GetTile(int32_t globalX, int32_t globalY)
+{
+    int32_t lx, ly;
+    Chunk *chunk = GetChunkAndLocalCoords(globalX, globalY, lx, ly);
+    if (!chunk)
+        return nullptr;
+    return &chunk->GetTile(lx, ly);
 }
 
 // Полы
@@ -152,7 +160,6 @@ void World::SetVelocity(EntityUid uid, double newVelX, double newVelY)
     entityManager_.SetVelocity(uid, newVelX, newVelY);
 }
 
-//
 void World::Tick(double dt)
 {
     FlushCommands();
