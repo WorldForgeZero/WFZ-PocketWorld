@@ -1,4 +1,3 @@
-PYTHON = .venv/bin/python3
 
 # Параметры Python
 PY_CFLAGS  := $(shell $(PYTHON) -c "import sysconfig; print(sysconfig.get_config_var('CFLAGS') or '')")
@@ -109,4 +108,4 @@ dist-release:
 # Очистка
 clean:
 	rm -rf build/ $(TARGET) $(DIST_DIR)
-	find $(SRC_DIR) $(LIB_DIR) -type f \( -name '*.o' -o -name '*.d' \) -delete
+	find $(SRC_DIR) -type f \( -name '*.o' -o -name '*.d' \) -delete
