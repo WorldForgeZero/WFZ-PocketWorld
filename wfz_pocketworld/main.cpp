@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     if (!python_runtime::Init(exeDir.string()))
     {
-        LOG_ERROR("server.main_init_func", "Не удалось инициализировать Python");
+        LOG_ERROR("server.main", "Не удалось инициализировать Python");
         return 1;
     }
 
@@ -42,12 +42,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-#ifdef NDEBUG
-        LOG_ERROR("server.main_init_func", "Файл /main/autorun.py не найден.");
-        return 1;
-#else
-        LOG_DEBUG("server.main_init_func", "Файл /main/autorun.py не найден. Досрочный выход проигнорирован в связи с debug сборкой");
-#endif
+        LOG_WARNING("server.main", "Файл /main/autorun.py не найден");
     }
 
     // TODO: Сделать запуск сервера вебсокетов
