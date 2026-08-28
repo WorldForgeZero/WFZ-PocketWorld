@@ -5,9 +5,9 @@
 #include <memory>
 #include <vector>
 
-#include "constants.h"
-#include "entity.h"
-#include "tile.h"
+#include "game/entity/entity.h"
+#include "game/entity/tile.h"
+#include "utils/constants.h"
 
 struct ChunkKey
 {
@@ -27,24 +27,20 @@ namespace std
     };
 }
 
-class Chunk
+class EntityChunk
 {
-private:
-    int32_t chunkX_, chunkY_;
-    std::array<Tile, CHUNK_SIZE * CHUNK_SIZE> tiles_;
-    std::vector<std::unique_ptr<Entity>> entities_;
-
 public:
-    Chunk(int32_t chunkX, int32_t chunkY);
-    ~Chunk();
+    EntityChunk(int32_t chunkX, int32_t chunkY);
+    ~EntityChunk();
 
-    Chunk(const Chunk &) = delete;
-    Chunk &operator=(const Chunk &) = delete;
+    EntityChunk(const EntityChunk &) = delete;
+    EntityChunk &operator=(const EntityChunk &) = delete;
 
-    Chunk(Chunk &&) noexcept = default;
-    Chunk &operator=(Chunk &&) noexcept = default;
+    EntityChunk(EntityChunk &&) noexcept = default;
+    EntityChunk &operator=(EntityChunk &&) noexcept = default;
 
     Tile &GetTile(uint32_t localX, uint32_t localY);
+    const Tile &GetTile(uint32_t localX, uint32_t localY) const;
 
     void AddEntity(std::unique_ptr<Entity> entity);
     std::unique_ptr<Entity> RemoveEntity(Entity *entity);
@@ -52,4 +48,11 @@ public:
 
     int32_t GetX() const { return chunkX_; }
     int32_t GetY() const { return chunkY_; }
+
+    bool IsEmpty() const;
+
+private:
+    int32_t chunkX_, chunkY_;
+    std::array<Tile, CHUNK_SIZE * CHUNK_SIZE> tiles_;
+    std::vector<std::unique_ptr<Entity>> entities_;
 };

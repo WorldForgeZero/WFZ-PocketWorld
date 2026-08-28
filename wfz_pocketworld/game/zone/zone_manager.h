@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "coordinate.h"
+#include "utils/coordinate.h"
 
 class World;
 

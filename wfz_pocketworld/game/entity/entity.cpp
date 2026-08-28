@@ -1,4 +1,5 @@
-#include "entity.h"
+#include "game/entity/entity.h"
+
 #include "constants.h"
 
 Entity::Entity(EntityUid uid, uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)

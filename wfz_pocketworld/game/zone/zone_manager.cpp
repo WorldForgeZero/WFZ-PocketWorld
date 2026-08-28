@@ -1,15 +1,15 @@
-#include "zone_manager.h"
+#include "game/zone/zone_manager.h"
 
 #include <algorithm>
 #include <cstdint>
 #include <queue>
 #include <unordered_set>
 
-#include "chunk.h"
-#include "entity.h"
-#include "tile.h"
+#include "game/entity/entity.h"
+#include "game/entity/entity_chunk.h"
+#include "game/entity/tile.h"
+#include "game/world/world.h"
 #include "utils/constants.h"
-#include "world.h"
 
 namespace
 {
@@ -20,7 +20,7 @@ namespace
 bool ZoneManager::IsFloor(World &world, Coordinate coord) const
 {
     int32_t lx, ly;
-    Chunk *chunk = world.GetChunkAndLocalCoords(coord.x, coord.y, lx, ly);
+    EntityChunk *chunk = world.GetEntityManager().GetChunkAndLocalCoords(coord.x, coord.y, lx, ly);
     if (!chunk)
         return false;
 
@@ -30,7 +30,7 @@ bool ZoneManager::IsFloor(World &world, Coordinate coord) const
 bool ZoneManager::HasBlocker(World &world, Coordinate coord) const
 {
     int32_t lx, ly;
-    Chunk *chunk = world.GetChunkAndLocalCoords(coord.x, coord.y, lx, ly);
+    EntityChunk *chunk = world.GetEntityManager().GetChunkAndLocalCoords(coord.x, coord.y, lx, ly);
     if (!chunk)
         return false;
 
@@ -61,7 +61,7 @@ void ZoneManager::UpdateBorderForZone(World &world, uint32_t zoneId)
         {
             Coordinate neigh{coord.x + dx[i], coord.y + dy[i]};
             int32_t nlX, nlY;
-            Chunk *neighChunk = world.GetChunkAndLocalCoords(neigh.x, neigh.y, nlX, nlY);
+            EntityChunk *neighChunk = world.GetEntityManager().GetChunkAndLocalCoords(neigh.x, neigh.y, nlX, nlY);
             if (!neighChunk)
             {
                 isBorder = true;
@@ -112,9 +112,8 @@ void ZoneManager::ProcessPendingChanges(World &world)
         {
             auto it = tileToZone_.find(e.coord);
             if (it != tileToZone_.end())
-            {
                 UpdateBorderForZone(world, it->second);
-            }
+
             break;
         }
         }
@@ -243,10 +242,8 @@ void ZoneManager::RemoveFloor(World &world, Coordinate coord)
 
     std::unordered_set<Coordinate> remaining;
     for (const Coordinate &t : oldTiles)
-    {
         if (visited.find(t) == visited.end())
             remaining.insert(t);
-    }
 
     std::vector<uint32_t> newZoneIds;
     while (!remaining.empty())

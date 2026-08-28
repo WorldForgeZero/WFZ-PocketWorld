@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "resistance.h"
-
 class Entity; // forward
 
 class Tile

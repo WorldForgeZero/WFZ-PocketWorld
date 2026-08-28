@@ -30,11 +30,11 @@ int main(int argc, char *argv[])
 
     if (!python_runtime::Init(exeDir.string()))
     {
-        LOG_ERROR("server.main", "Не удалось инициализировать Python");
+        LOG_ERROR("server.init", "Не удалось инициализировать Python");
         return 1;
     }
 
-    fs::path autorunPath = exeDir / "main" / "autorun.py";
+    fs::path autorunPath = exeDir / "python" / "autorun.py";
     if (fs::exists(autorunPath))
     {
         if (!python_runtime::RunFile(autorunPath.string()))
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        LOG_WARNING("server.main", "Файл /main/autorun.py не найден");
+        LOG_WARNING("server.init", "Файл /python/autorun.py не найден");
     }
 
     // TODO: Сделать запуск сервера вебсокетов
