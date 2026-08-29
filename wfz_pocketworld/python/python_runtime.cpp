@@ -4,9 +4,12 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+
 #include <pybind11/embed.h>
 
 #include "bindings.h"
+
+#include "utils/logger.h"
 
 namespace py = pybind11;
 namespace fs = std::filesystem;
@@ -54,7 +57,7 @@ namespace python_runtime
         }
         catch (const py::error_already_set &e)
         {
-            std::cerr << "Ошибка в " << path << ": " << e.what() << std::endl;
+            LOG_ERROR("Python runtime", "Ошибка в " + path + ": " + e.what());
             return false;
         }
     }
