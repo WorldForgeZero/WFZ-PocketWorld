@@ -134,7 +134,7 @@ void EntityManager::RemoveFloor(int32_t x, int32_t y)
 
 EntityUid EntityManager::SpawnEntity(uint32_t type, uint32_t flags, Coordinate anchor, uint8_t rotation, const EntityShape *footprint)
 {
-    auto entity = std::make_unique<Entity>(nextUid_, type, flags, anchor, rotation, footprint);
+    auto entity = std::make_unique<Entity>(nextUid_++, type, flags, anchor, rotation, footprint);
     Entity *rawEntity = entity.get();
 
     auto occupied = rawEntity->GetOccupiedTiles();
