@@ -1,115 +1,177 @@
-PYTHON = .venv/bin/python3
+PYTHON ?= .venv/bin/python3
+
 MAKEFLAGS += -j$(shell nproc 2>/dev/null || echo 4)
 
-# Параметры Python
-PY_CFLAGS  := $(shell $(PYTHON) -c "import sysconfig; print(sysconfig.get_config_var('CFLAGS') or '')")
-PY_INCLUDE := $(shell $(PYTHON) -c "import sysconfig; print('-I' + sysconfig.get_path('include'))")
-PYBIND11_INCLUDE := $(shell $(PYTHON) -m pybind11 --includes)
-PY_LIBS := $(shell $(PYTHON) -c "import sysconfig; print('-L' + sysconfig.get_config_var('LIBDIR'), '-lpython' + sysconfig.get_config_var('VERSION'))")
+# Project
+TARGET          := server
+SRC_DIR         := wfz_pocketworld
+THIRD_PARTY_DIR := third_party
+BUILD_DIR       := build
+DIST_DIR        := dist
 
-# Компиляторы
-CXX = g++
-CC  = gcc
+PYI_DIR := $(SRC_DIR)/python/pyi
 
-# Базовые флаги
-SRC_DIR = wfz_pocketworld
-LIB_DIR = lib
-PYI_DIR = $(SRC_DIR)/python/pyi
-DIST_DIR = dist
+# Compiler
+CXX := g++
 
-# Исключаемые файлы и каталоги
-EXCLUDE_DIRS = \( -name '.*' -o -name '__*' \) -prune
+# Python / pybind11
+PYBIND11_INCLUDES := $(shell $(PYTHON) -m pybind11 --includes)
 
-# Исходники
-CPP_SOURCES := $(shell find $(SRC_DIR) $(LIB_DIR) $(EXCLUDE_DIRS) -o -type f -name '*.cpp' -print)
-C_SOURCES   := $(shell find $(SRC_DIR) $(LIB_DIR) $(EXCLUDE_DIRS) -o -type f -name '*.c' -print)
+PY_LIBDIR := $(shell $(PYTHON) -c \
+	"import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')")
 
-# Объектные файлы для режимов
-DEBUG_CPP_OBJS   = $(patsubst %.cpp, build/debug/%.o, $(CPP_SOURCES))
-DEBUG_C_OBJS     = $(patsubst %.c, build/debug/%.o, $(C_SOURCES))
-DEBUG_OBJS       = $(DEBUG_CPP_OBJS) $(DEBUG_C_OBJS)
+PY_LDVERSION := $(shell $(PYTHON) -c \
+	"import sysconfig; print(sysconfig.get_config_var('LDVERSION') or sysconfig.get_config_var('VERSION') or '')")
 
-RELEASE_CPP_OBJS = $(patsubst %.cpp, build/release/%.o, $(CPP_SOURCES))
-RELEASE_C_OBJS   = $(patsubst %.c, build/release/%.o, $(C_SOURCES))
-RELEASE_OBJS     = $(RELEASE_CPP_OBJS) $(RELEASE_C_OBJS)
+PY_LIBS := $(shell $(PYTHON) -c \
+	"import sysconfig; print(sysconfig.get_config_var('LIBS') or '')")
 
-# Исполняемый файл
-TARGET = server
+PY_SYSLIBS := $(shell $(PYTHON) -c \
+	"import sysconfig; print(sysconfig.get_config_var('SYSLIBS') or '')")
 
-# Пути включения
-INCLUDE_DIRS := $(shell find $(SRC_DIR) $(LIB_DIR) $(EXCLUDE_DIRS) -o -type d -exec echo -I{} \;)
+PY_LINKFORSHARED := $(shell $(PYTHON) -c \
+	"import sysconfig; print(sysconfig.get_config_var('LINKFORSHARED') or '')")
 
-# Флаги C++ и C
-COMMON_CXXFLAGS = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(PYBIND11_INCLUDE) $(INCLUDE_DIRS) -std=c++17
-COMMON_CFLAGS   = -fPIC -Wall -Wextra $(PY_CFLAGS) $(PY_INCLUDE) $(INCLUDE_DIRS)
+PY_EMBED_LDFLAGS := \
+	-L$(PY_LIBDIR) \
+	-lpython$(PY_LDVERSION) \
+	$(PY_LIBS) \
+	$(PY_SYSLIBS) \
+	$(PY_LINKFORSHARED)
 
-DEBUG_CXXFLAGS = $(filter-out -DNDEBUG, $(COMMON_CXXFLAGS)) -g -O0
-DEBUG_CFLAGS   = $(filter-out -DNDEBUG, $(COMMON_CFLAGS)) -g -O0
+# Source discovery
+FIND_EXCLUDES := \( -name '.*' -o -name '__*' \) -prune -o
 
-RELEASE_CXXFLAGS = $(COMMON_CXXFLAGS) -g -O3 -flto -fomit-frame-pointer -DNDEBUG
-RELEASE_CFLAGS   = $(COMMON_CFLAGS) -g -O3 -flto -fomit-frame-pointer -DNDEBUG
+CPP_SOURCES := $(shell \
+	find $(SRC_DIR) \
+	$(FIND_EXCLUDES) \
+	-type f -name '*.cpp' -print)
 
-# Линковочные флаги
-BASE_LDFLAGS = -lpthread $(PY_LIBS)
-DEBUG_LDFLAGS   = $(BASE_LDFLAGS)
-RELEASE_LDFLAGS = $(BASE_LDFLAGS) -flto
+# Include paths
+INCLUDE_DIRS := $(shell \
+	find $(SRC_DIR) $(THIRD_PARTY_DIR) \
+	$(FIND_EXCLUDES) \
+	-type d -print | sed 's|^|-I|')
 
-# Цели
-.PHONY: all debug release clean clear dist dist-release
+# Objects
+DEBUG_OBJS := $(patsubst %.cpp,$(BUILD_DIR)/debug/%.o,$(CPP_SOURCES))
+
+RELEASE_OBJS := $(patsubst %.cpp,$(BUILD_DIR)/release/%.o,$(CPP_SOURCES))
+
+DEBUG_DEPS   := $(DEBUG_OBJS:.o=.d)
+RELEASE_DEPS := $(RELEASE_OBJS:.o=.d)
+
+# Compiler flags
+COMMON_CXXFLAGS := \
+	-fPIC \
+	-pthread \
+	-Wall \
+	-Wextra \
+	$(PYBIND11_INCLUDES) \
+	$(INCLUDE_DIRS) \
+	-std=c++17
+
+DEBUG_CXXFLAGS := \
+	$(COMMON_CXXFLAGS) \
+	-g \
+	-O0
+
+NATIVE_FLAGS ?= -march=native -mtune=native
+
+RELEASE_OPT_FLAGS ?= \
+	-O3 \
+	-flto \
+	$(NATIVE_FLAGS) \
+	-fomit-frame-pointer
+
+RELEASE_CXXFLAGS := \
+	$(COMMON_CXXFLAGS) \
+	$(RELEASE_OPT_FLAGS) \
+	-DNDEBUG
+
+# Linker flags
+BASE_LDFLAGS := \
+	-pthread \
+	$(PY_EMBED_LDFLAGS)
+
+DEBUG_LDFLAGS := \
+	$(BASE_LDFLAGS)
+
+RELEASE_LDFLAGS := \
+	$(BASE_LDFLAGS) \
+	-flto
+
+# Targets
+.PHONY: \
+	all \
+	debug \
+	release \
+	dist \
+	dist-release \
+	clean \
+	clear \
+	python-info
 
 all: debug
+
 clear: clean
 
-# Компиляция C++ в объектные файлы (debug)
-build/debug/%.o: %.cpp
+# Debug objects
+$(BUILD_DIR)/debug/%.o: %.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(DEBUG_CXXFLAGS) -MMD -c $< -o $@
+	$(CXX) $(DEBUG_CXXFLAGS) -MMD -MP -c $< -o $@
 
-# Компиляция C в объектные файлы (debug)
-build/debug/%.o: %.c
+# Release objects
+$(BUILD_DIR)/release/%.o: %.cpp
 	@mkdir -p $(@D)
-	$(CC) $(DEBUG_CFLAGS) -MMD -c $< -o $@
+	$(CXX) $(RELEASE_CXXFLAGS) -MMD -MP -c $< -o $@
 
-# Компиляция C++ в объектные файлы (release)
-build/release/%.o: %.cpp
-	@mkdir -p $(@D)
-	$(CXX) $(RELEASE_CXXFLAGS) -MMD -c $< -o $@
-
-# Компиляция C в объектные файлы (release)
-build/release/%.o: %.c
-	@mkdir -p $(@D)
-	$(CC) $(RELEASE_CFLAGS) -MMD -c $< -o $@
-
-# Линковка debug
+# Linking
 debug: $(DEBUG_OBJS)
 	$(CXX) $(DEBUG_OBJS) $(DEBUG_LDFLAGS) -o $(TARGET)
 
-# Линковка release
 release: $(RELEASE_OBJS)
 	$(CXX) $(RELEASE_OBJS) $(RELEASE_LDFLAGS) -o $(TARGET)
 
+# Distribution
 DIST_MODE ?= debug
 
 dist: $(DIST_MODE)
 	@rm -rf $(DIST_DIR)
 	@mkdir -p $(DIST_DIR)/wfz
 	@mkdir -p $(DIST_DIR)/python
+
 	cp $(TARGET) $(DIST_DIR)/
-	@rm -f $(TARGET)
-	cp $(PYI_DIR)/*.pyi $(DIST_DIR)/wfz/ 2>/dev/null || true
-	cp $(PYI_DIR)/*.py $(DIST_DIR)/wfz/ 2>/dev/null || true
+
+	@if [ -d "$(PYI_DIR)" ]; then \
+		cp -a "$(PYI_DIR)/." "$(DIST_DIR)/wfz/"; \
+	fi
+
 	@touch $(DIST_DIR)/python/autorun.py
+
 	@echo "Дистрибутив собран в $(DIST_DIR)/ (режим: $(DIST_MODE))"
 
 dist-release:
 	$(MAKE) dist DIST_MODE=release
 
-# Зависимости
--include build/debug/*.d build/release/*.d
+# Python diagnostics
+python-info:
+	@$(PYTHON) -c \
+		"import sys, sysconfig; \
+		print('Executable:       ', sys.executable); \
+		print('Version:          ', sys.version.replace('\n', ' ')); \
+		print('ABI flags:        ', sys.abiflags); \
+		print('LDVERSION:        ', sysconfig.get_config_var('LDVERSION')); \
+		print('Py_GIL_DISABLED:  ', sysconfig.get_config_var('Py_GIL_DISABLED')); \
+		print('GIL enabled:      ', sys._is_gil_enabled() if hasattr(sys, '_is_gil_enabled') else 'unknown'); \
+		print('LIBDIR:           ', sysconfig.get_config_var('LIBDIR'))"
 
-# Очистка
+# Dependency files
+-include $(DEBUG_DEPS)
+-include $(RELEASE_DEPS)
+
+# Cleanup
 clean:
 	rm -f $(TARGET)
 	rm -rf $(DIST_DIR)
-	rm -rf build/debug/wfz_pocketworld build/release/wfz_pocketworld
-	find build -type d -empty -delete 2>/dev/null || true
+	rm -rf $(BUILD_DIR)
