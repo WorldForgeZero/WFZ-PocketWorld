@@ -1,120 +1,80 @@
-PYTHON ?= .venv/bin/python3
-
-MAKEFLAGS += -j$(shell nproc 2>/dev/null || echo 4)
-
 # Project
-TARGET          := server
-SRC_DIR         := wfz_pocketworld
-THIRD_PARTY_DIR := third_party
-BUILD_DIR       := build
-DIST_DIR        := dist
+TARGET := server
 
-PYI_DIR := $(SRC_DIR)/python/pyi
+SRC_DIR := src
+THIRD_PARTY_DIR := third_party
+
+BUILD_DIR := build
+DIST_DIR := dist
 
 # Compiler
 CXX := g++
 
-# Python / pybind11
-PYBIND11_INCLUDES := $(shell $(PYTHON) -m pybind11 --includes)
-
-PY_LIBDIR := $(shell $(PYTHON) -c \
-	"import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')")
-
-PY_LDVERSION := $(shell $(PYTHON) -c \
-	"import sysconfig; print(sysconfig.get_config_var('LDVERSION') or sysconfig.get_config_var('VERSION') or '')")
-
-PY_LIBS := $(shell $(PYTHON) -c \
-	"import sysconfig; print(sysconfig.get_config_var('LIBS') or '')")
-
-PY_SYSLIBS := $(shell $(PYTHON) -c \
-	"import sysconfig; print(sysconfig.get_config_var('SYSLIBS') or '')")
-
-PY_LINKFORSHARED := $(shell $(PYTHON) -c \
-	"import sysconfig; print(sysconfig.get_config_var('LINKFORSHARED') or '')")
-
-PY_EMBED_LDFLAGS := \
-	-L$(PY_LIBDIR) \
-	-lpython$(PY_LDVERSION) \
-	$(PY_LIBS) \
-	$(PY_SYSLIBS) \
-	$(PY_LINKFORSHARED)
-
 # Source discovery
-FIND_EXCLUDES := \( -name '.*' -o -name '__*' \) -prune -o
+FIND_EXCLUDES := \( -name '.*' -o -name '__*' -o -name 'old' \) -prune -o
 
-CPP_SOURCES := $(shell \
+SOURCES := $(shell \
 	find $(SRC_DIR) \
 	$(FIND_EXCLUDES) \
 	-type f -name '*.cpp' -print)
 
-# Include paths
+INCLUDE_ROOTS := $(SRC_DIR) $(wildcard $(THIRD_PARTY_DIR))
+
 INCLUDE_DIRS := $(shell \
-	find $(SRC_DIR) $(THIRD_PARTY_DIR) \
+	find $(INCLUDE_ROOTS) \
 	$(FIND_EXCLUDES) \
-	-type d -print | sed 's|^|-I|')
+	-type d -print)
+
+INCLUDE_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
 
 # Objects
-DEBUG_OBJS := $(patsubst %.cpp,$(BUILD_DIR)/debug/%.o,$(CPP_SOURCES))
+DEBUG_OBJS := $(patsubst %.cpp,$(BUILD_DIR)/debug/%.o,$(SOURCES))
+RELEASE_OBJS := $(patsubst %.cpp,$(BUILD_DIR)/release/%.o,$(SOURCES))
 
-RELEASE_OBJS := $(patsubst %.cpp,$(BUILD_DIR)/release/%.o,$(CPP_SOURCES))
-
-DEBUG_DEPS   := $(DEBUG_OBJS:.o=.d)
-RELEASE_DEPS := $(RELEASE_OBJS:.o=.d)
+DEPS := \
+	$(DEBUG_OBJS:.o=.d) \
+	$(RELEASE_OBJS:.o=.d)
 
 # Compiler flags
 COMMON_CXXFLAGS := \
-	-fPIC \
-	-pthread \
+	-std=c++17 \
 	-Wall \
 	-Wextra \
-	$(PYBIND11_INCLUDES) \
-	$(INCLUDE_DIRS) \
-	-std=c++17
+	-pthread \
+	$(INCLUDE_FLAGS)
 
 DEBUG_CXXFLAGS := \
 	$(COMMON_CXXFLAGS) \
-	-g \
-	-O0
+	-O0 \
+	-g
 
-NATIVE_FLAGS ?= -march=native -mtune=native
-
-RELEASE_OPT_FLAGS ?= \
-	-O3 \
-	-flto \
-	$(NATIVE_FLAGS) \
-	-fomit-frame-pointer
+NATIVE_FLAGS ?=
 
 RELEASE_CXXFLAGS := \
 	$(COMMON_CXXFLAGS) \
-	$(RELEASE_OPT_FLAGS) \
-	-DNDEBUG
+	-O3 \
+	-flto \
+	-DNDEBUG \
+	$(NATIVE_FLAGS)
 
 # Linker flags
-BASE_LDFLAGS := \
-	-pthread \
-	$(PY_EMBED_LDFLAGS)
+DEBUG_LDFLAGS := -pthread
+RELEASE_LDFLAGS := -pthread -flto
 
-DEBUG_LDFLAGS := \
-	$(BASE_LDFLAGS)
+LDLIBS ?=
 
-RELEASE_LDFLAGS := \
-	$(BASE_LDFLAGS) \
-	-flto
+# Output binaries
+DEBUG_BIN := $(BUILD_DIR)/debug/$(TARGET)
+RELEASE_BIN := $(BUILD_DIR)/release/$(TARGET)
 
 # Targets
-.PHONY: \
-	all \
-	debug \
-	release \
-	dist \
-	dist-release \
-	clean \
-	clear \
-	python-info
+.PHONY: all debug release dist dist-release clean clear
 
 all: debug
 
-clear: clean
+debug: $(DEBUG_BIN)
+
+release: $(RELEASE_BIN)
 
 # Debug objects
 $(BUILD_DIR)/debug/%.o: %.cpp
@@ -126,52 +86,32 @@ $(BUILD_DIR)/release/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(RELEASE_CXXFLAGS) -MMD -MP -c $< -o $@
 
-# Linking
-debug: $(DEBUG_OBJS)
-	$(CXX) $(DEBUG_OBJS) $(DEBUG_LDFLAGS) -o $(TARGET)
+# Debug linking
+$(DEBUG_BIN): $(DEBUG_OBJS)
+	@mkdir -p $(@D)
+	$(CXX) $^ $(DEBUG_LDFLAGS) $(LDLIBS) -o $@
 
-release: $(RELEASE_OBJS)
-	$(CXX) $(RELEASE_OBJS) $(RELEASE_LDFLAGS) -o $(TARGET)
+# Release linking
+$(RELEASE_BIN): $(RELEASE_OBJS)
+	@mkdir -p $(@D)
+	$(CXX) $^ $(RELEASE_LDFLAGS) $(LDLIBS) -o $@
 
 # Distribution
 DIST_MODE ?= debug
 
-dist: $(DIST_MODE)
-	@rm -rf $(DIST_DIR)
-	@mkdir -p $(DIST_DIR)/wfz
-	@mkdir -p $(DIST_DIR)/python
-
-	cp $(TARGET) $(DIST_DIR)/
-
-	@if [ -d "$(PYI_DIR)" ]; then \
-		cp -a "$(PYI_DIR)/." "$(DIST_DIR)/wfz/"; \
-	fi
-
-	@touch $(DIST_DIR)/python/autorun.py
-
-	@echo "Дистрибутив собран в $(DIST_DIR)/ (режим: $(DIST_MODE))"
+dist: $(BUILD_DIR)/$(DIST_MODE)/$(TARGET)
+	@mkdir -p $(DIST_DIR)
+	cp $< $(DIST_DIR)/$(TARGET)
+	@echo "Distribution ready: $(DIST_DIR)/$(TARGET) ($(DIST_MODE))"
 
 dist-release:
 	$(MAKE) dist DIST_MODE=release
 
-# Python diagnostics
-python-info:
-	@$(PYTHON) -c \
-		"import sys, sysconfig; \
-		print('Executable:       ', sys.executable); \
-		print('Version:          ', sys.version.replace('\n', ' ')); \
-		print('ABI flags:        ', sys.abiflags); \
-		print('LDVERSION:        ', sysconfig.get_config_var('LDVERSION')); \
-		print('Py_GIL_DISABLED:  ', sysconfig.get_config_var('Py_GIL_DISABLED')); \
-		print('GIL enabled:      ', sys._is_gil_enabled() if hasattr(sys, '_is_gil_enabled') else 'unknown'); \
-		print('LIBDIR:           ', sysconfig.get_config_var('LIBDIR'))"
-
-# Dependency files
--include $(DEBUG_DEPS)
--include $(RELEASE_DEPS)
+# Dependencies
+-include $(DEPS)
 
 # Cleanup
 clean:
-	rm -f $(TARGET)
-	rm -rf $(DIST_DIR)
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) $(DIST_DIR)
+
+clear: clean
